@@ -1,6 +1,7 @@
 # ───────────────────────────────── imports ────────────────────────────────── #
 from enum import Enum
-from random import choice as rchoice
+from random import choice as rchoice, randint
+from numpy.random import choice as npchoice
 
 # ─────────────────────────── Cardinal Directions ──────────────────────────── #
 class Direction(Enum):
@@ -64,17 +65,17 @@ class DungeonMap(object):
                 g.count(Cell.magic_sword) >= 1
 
     # ────────────────────── find random non-wall cells ────────────────────── #
-    def random_cell(self, start: (int, int)= (0, 0), dist: int= -1):
+    def random_cell_dist(self, start: (int, int)= (0, 0), dist: int= -1):
         """
         Finds a random valid cell within a 'dist' manhattan distance of the start
         if 'dist' = -1, finds a random valid cell in the whole map
         """
-        candidates = set()
+        candidates = list()
         a, b = start
         for h in range(self.n * self.m):
             pos = (h // self.m, h % self.m)
-            if dist < 0 or self.distance(start, pos) <= dist and self[pos] != Cell.wall:
-                candidates.add(pos)
+            if (dist < 0 or 0 < self.distance(start, pos) <= dist) and self[pos] != Cell.wall:
+                candidates.append(pos)
         assert len(candidates) > 0, "empty candidates for a random cell"
         return rchoice(candidates)
 
@@ -95,10 +96,33 @@ class DungeonMap(object):
     # ────────────────────── generate a random dungeon ─────────────────────── #
     def generate_map(self):
         """ @TODO: finish the random generation """
-        self[0, 1] = Cell.golden_key
-        self[1, 0] = Cell.magic_sword
-        assert self.valid()
-        return self.snapshot()
+        n, m = self.n, self.m
+        grid = ['' for i in range(n * m)]
+        # ------------------- treasure and start are fixed ------------------- #
+        grid[0] = Cell.treasure
+        grid[n * m - 1] = Cell.start
+        required = [Cell.golden_key, Cell.magic_sword]
+        while len(required) > 0:
+            h = randint(1, n * m - 2)
+            if grid[h] == '': grid[h] = required.pop()
+
+        cell_p = [
+            (Cell.empty, 0.5),
+            (Cell.wall, 0.2),
+            (Cell.magic_portal, 0.05),
+            (Cell.crack, 0.05),
+            (Cell.moving_platform, 0.05),
+            (Cell.trap, 0.05),
+            (Cell.enemy, 0.1)
+        ]
+        cells = [cell for (cell,_) in cell_p]
+        distrib = [p for (_,p) in cell_p]
+        for h in range(n * m):
+            cell = npchoice(cells, p=distrib)
+            if grid[h] == '': grid[h] = cell
+
+        assert self.valid(grid)
+        return grid
 
     # ──────────────────── take a snapshot, reload, reset ──────────────────── #
     def snapshot(self):

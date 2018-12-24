@@ -43,6 +43,8 @@ class TextInterface(object):
         os.system('clear')
         print(self.dungeon)
         print(self.infos)
+        print(self.dungeon.caption)
+        self.dungeon.caption = ''
 
     @property
     def infos(self):
@@ -56,13 +58,12 @@ class TextInterface(object):
         """ Main loop of interaction with the human player """
         self.display()
         while not self.dungeon.over:
-            self.handle_input() # char in
+            self.handle_input(getch()) # get the next char input by user
             self.display()
         print(' GAME OVER '.center(80, '-'))
 
-    def handle_input(self):
+    def handle_input(self, ch: str):
         """ waits for input from the player """
-        ch = getch()
         if ch in ('l', 'd'): # →
             self.dungeon.move(self.player, Direction.EAST)
         if ch in ('j', 's'): # ↓
