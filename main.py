@@ -6,5 +6,5 @@ from kernel import Dungeon
 # ──────────────────────────────────────────────────────────────────────────── #
 
 if __name__ == '__main__':
-    interface = TextInterface(Dungeon(4, 6, 1))
+    interface = TextInterface(Dungeon(14, 32, 1))
     interface.loop()
