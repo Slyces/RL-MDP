@@ -1,7 +1,8 @@
 # ───────────────────────────────── imports ────────────────────────────────── #
 from random import random
 from characters import Adventurer
-from dungeon_map import DungeonMap, Direction, Cell
+from dungeon_map import DungeonMap, Direction, Cell, AStar
+import utils
 # ──────────────────────────────────────────────────────────────────────────── #
 
 # ────────────── Kernel classes for the MADI project (01/2019) ─────────────── #
@@ -16,6 +17,7 @@ class Dungeon(object):
         self.agents = [Adventurer(n - 1, m - 1) for i in range(nb_players)]
         self.over = False
         self.caption = ''
+        self.winnable = self.__is_winnable()
 
     # ──────────────────────────── moving agents ───────────────────────────── #
     def move(self, agent: Adventurer, direction: Direction):
@@ -30,6 +32,34 @@ class Dungeon(object):
         assert self.map[position] != Cell.wall, "can't teleport in a wall"
         agent.pos = position
         self.enter(agent, self.map[agent.pos])
+
+    # ────────────────────── is that dungeon winnable ? ────────────────────── #
+    def __is_winnable(self, portals: bool= False):
+        """
+        Tests if the dungeon is winnable,
+        i.e: there exists a path from the start to the golden key, from the
+        golden key to the treasure and from the treasure to the start
+
+        @param portals: [bool] authorizes the use of random portals in the path
+        @return cool: True if the path exists under the given conditions
+        """
+        astar = AStar() if portals else \
+                AStar(unreachable=(Cell.wall, Cell.crack, Cell.magic_portal))
+        astar.load_map(self.map)
+        key, treasure, start = None, (0, 0), (self.n - 1, self.m - 1)
+        for h in range(self.m * self.n):
+            if self.map[h] == Cell.golden_key:
+                key = (h // self.m, h % self.m)
+        path_to_key      = astar.process_shortest_path(start, key)
+        path_to_treasure = astar.process_shortest_path(key, treasure)
+        path_back        = astar.process_shortest_path(treasure, start)
+
+        # for path_str in ('path_to_key', 'path_to_treasure', 'path_back'):
+            # path = locals()[path_str]
+            # if path:
+                # print((' * ' + path_str + ' * ').center(4 * self.m + 1, '-'))
+                # astar.display_path(path)
+        return bool(path_to_key) and bool(path_to_treasure) and bool(path_back)
 
     # ─────────────────────────── entering a cell ──────────────────────────── #
     def enter(self, agent: Adventurer, cell: Cell):
@@ -131,6 +161,41 @@ class Dungeon(object):
 
     def __repr__(self):
         return "Dungeon({} x {}, {} players)".format(self.n, self.m, len(self.agents))
+
+    # ─────────────────── print the different astar paths ──────────────────── #
+    def display_paths(self):
+        # --------------------- find the different paths --------------------- #
+        astar = AStar(unreachable=(Cell.wall, Cell.crack, Cell.magic_portal))
+        astar.load_map(self.map)
+        key, treasure, start = None, (0, 0), (self.n - 1, self.m - 1)
+        for h in range(self.m * self.n):
+            if self.map[h] == Cell.golden_key:
+                key = (h // self.m, h % self.m)
+        path_to_key      = astar.process_shortest_path(start, key)
+        path_to_treasure = astar.process_shortest_path(key, treasure)
+        path_back        = astar.process_shortest_path(treasure, start)
+
+        # ----------------------- version with colors ------------------------ #
+        agents_symbols = '*^'
+        assert len(self.agents) <= len(agents_symbols)
+        if not self.agents:
+            return str(self.map)
+        legends = []
+        map_str = [cell.value for cell in self.map]
+        for h, agent in enumerate(self.agents):
+            (i, j), s = agent.pos, agents_symbols[h]
+            p = i * self.map.m + j
+            map_str[p] = s + map_str[p] if h else map_str[p] + s
+            legends.append('{}: agent {}\'s position'.format(s, h))
+
+        legend = '\n'.join(legends)
+        map_repr = utils.color_grid(map_str, (self.map.n, self.map.m),
+                border_colors={
+                    utils.Color.blue: path_to_key,
+                    utils.Color.red: path_to_treasure,
+                    utils.Color.green: path_back
+                    })
+        return map_repr + legend + '\n'
 
 # ──────────────────────────────── executable ──────────────────────────────── #
 if __name__ == '__main__':
