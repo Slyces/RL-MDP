@@ -102,6 +102,8 @@ def color_grid(array, size:int, cell_size: int=3, border_colors: dict= None,
             # | . | . | . |
             # +---+---+---+
             return to_color[row][col - 1]['border']
+        if ctype == 'both' and col > 0 and row > 0 and to_color[row-1][col-1]['border']:
+            return to_color[row-1][col-1]['border']
         return None
 
     all_cells = [['' for i in range(2 * m + 1)] for j in range(2 * n + 1)]
