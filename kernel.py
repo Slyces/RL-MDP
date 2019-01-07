@@ -15,7 +15,7 @@ class Dungeon(object):
     def __init__(self, n: int, m: int, nb_players: int = 1):
         self.n, self.m = n, m
         self.map = DungeonMap(n, m)
-        self.agents = [Adventurer(n - 1, m - 1) for i in range(nb_players)]
+        self.agents = [Adventurer(n - 1, m - 1, n, m) for i in range(nb_players)]
         self.over = False
         self.caption = ''
 

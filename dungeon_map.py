@@ -12,7 +12,7 @@ class Direction(Enum):
 
 # ─────────────────────────────── Cells Types ──────────────────────────────── #
 class Cell(Enum):
-    pretty_cells = False
+    pretty_cells = True
     empty           = '  '[pretty_cells]
     start           = '◉◉'[pretty_cells]
     wall            = '■■'[pretty_cells]
@@ -56,10 +56,10 @@ class DungeonMap(object):
         """
         astar = AStar(unreachable=(Cell.wall, Cell.crack)) if portals else \
                 AStar(unreachable=(Cell.wall, Cell.crack, Cell.magic_portal))
-        astar.load_map(self.map)
+        astar.load_map(self)
         key, treasure, start = None, (0, 0), (self.n - 1, self.m - 1)
         for h in range(self.m * self.n):
-            if self.map[h] == Cell.golden_key:
+            if self[h] == Cell.golden_key:
                 key = (h // self.m, h % self.m)
         path_to_key      = astar.process_shortest_path(start, key)
         path_to_treasure = astar.process_shortest_path(key, treasure)
@@ -159,7 +159,7 @@ class DungeonMap(object):
         """ Loads a snapshot (list of cells) of a dungeon of same size """
         assert len(snapshot) == self.n * self.m
         self.__grid = snapshot
-        self.winnable = self.__is_winable(portals= False)
+        self.winnable = self.__is_winnable(portals= False)
 
     def reset(self):
         """ Resets the dungeon to its initial layout (stored in init_map) """
