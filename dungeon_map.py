@@ -12,7 +12,7 @@ class Direction(Enum):
 
 # ─────────────────────────────── Cells Types ──────────────────────────────── #
 class Cell(Enum):
-    pretty_cells = True
+    pretty_cells = False
     empty           = '  '[pretty_cells]
     start           = '◉◉'[pretty_cells]
     wall            = '■■'[pretty_cells]
@@ -28,8 +28,8 @@ class Cell(Enum):
 # ─────────────────────── Map representing the dungeon ─────────────────────── #
 class DungeonMap(object):
     """ Dungeon Map represented by a grid of n * m cells """
-    # ------------ different types of cells found in the dungeon ------------- #
 
+    # ------------ different types of cells found in the dungeon ------------- #
     def __init__(self, n : int, m : int):
         """
         The dungeon is a grid of size n * m, initialized
@@ -44,11 +44,33 @@ class DungeonMap(object):
         self.init_map = self.generate_map()
         self.reset()
 
-    # ──────────────────── tests of validity for the map ───────────────────── #
-    def winnable(self):
-        """ Is there a non-lethal path from start to treasure, and back ? """
-        # @TODO: code this
-        pass
+    # ────────────────────── is that dungeon winnable ? ────────────────────── #
+    def __is_winnable(self, portals: bool= False):
+        """
+        Tests if the dungeon is winnable,
+        i.e: there exists a path from the start to the golden key, from the
+        golden key to the treasure and from the treasure to the start
+
+        @param portals: [bool] authorizes the use of random portals in the path
+        @return cool: True if the path exists under the given conditions
+        """
+        astar = AStar(unreachable=(Cell.wall, Cell.crack)) if portals else \
+                AStar(unreachable=(Cell.wall, Cell.crack, Cell.magic_portal))
+        astar.load_map(self.map)
+        key, treasure, start = None, (0, 0), (self.n - 1, self.m - 1)
+        for h in range(self.m * self.n):
+            if self.map[h] == Cell.golden_key:
+                key = (h // self.m, h % self.m)
+        path_to_key      = astar.process_shortest_path(start, key)
+        path_to_treasure = astar.process_shortest_path(key, treasure)
+        path_back        = astar.process_shortest_path(treasure, start)
+
+        # for path_str in ('path_to_key', 'path_to_treasure', 'path_back'):
+            # path = locals()[path_str]
+            # if path:
+                # print((' * ' + path_str + ' * ').center(4 * self.m + 1, '-'))
+                # astar.display_path(path)
+        return bool(path_to_key) and bool(path_to_treasure) and bool(path_back)
 
     def valid(self, g=None):
         """
@@ -80,7 +102,6 @@ class DungeonMap(object):
         return rchoice(candidates)
 
     # ────────────────────────── manhattan distance ────────────────────────── #
-    @staticmethod
     def distance(self, A: (int, int), B: (int, int)):
         """ Returns the Manhattan distance between A and B """
         (ax, ay), (bx, by) = A, B
@@ -92,11 +113,15 @@ class DungeonMap(object):
         i, j = pos
         di, dj = direction.value
         ni, nj = min(max(i + di, 0), self.n - 1), min(max(j + dj, 0), self.m - 1)
-        return (i,j) if self[ni, nj] == Cell.wall else (ni, nj)
+        return (ni, nj)
 
     # ────────────────────── generate a random dungeon ─────────────────────── #
     def generate_map(self):
-        """ @TODO: finish the random generation """
+        """
+        Generates a list of cells to be loaded as a layout
+
+        @return a grid of Cell enums randomly generated
+        """
         n, m = self.n, self.m
         grid = ['' for i in range(n * m)]
         # ------------------- treasure and start are fixed ------------------- #
@@ -131,9 +156,10 @@ class DungeonMap(object):
         return self.__grid.copy()
 
     def load(self, snapshot):
-        """ Loads a snapshot of a dungeon of same size """
+        """ Loads a snapshot (list of cells) of a dungeon of same size """
         assert len(snapshot) == self.n * self.m
         self.__grid = snapshot
+        self.winnable = self.__is_winable(portals= False)
 
     def reset(self):
         """ Resets the dungeon to its initial layout (stored in init_map) """

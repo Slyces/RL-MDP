@@ -4,6 +4,7 @@ from characters import Adventurer
 from dungeon_map import DungeonMap, Direction, Cell, AStar
 import utils
 # ──────────────────────────────────────────────────────────────────────────── #
+# @TODO (for the indian coding team) visualize a policy
 
 # ────────────── Kernel classes for the MADI project (01/2019) ─────────────── #
 class Dungeon(object):
@@ -17,13 +18,22 @@ class Dungeon(object):
         self.agents = [Adventurer(n - 1, m - 1) for i in range(nb_players)]
         self.over = False
         self.caption = ''
-        self.winnable = self.__is_winnable()
+
+    # ────────────────────── is that dungeon winnable ? ────────────────────── #
+    @property
+    def winnable(self):
+        """ getter for winnable attribute """
+        return self.map.winnable
 
     # ──────────────────────────── moving agents ───────────────────────────── #
     def move(self, agent: Adventurer, direction: Direction):
-        """ Moves an agent in a direction """
+        """
+        Moves an agent in a direction
+
+        @return an int, the reward associated with this action in that state
+        """
         agent.pos = self.map.move(agent.pos, direction)
-        self.enter(agent, self.map[agent.pos])
+        return self.enter(agent, self.map[agent.pos])
 
     def teleport(self, agent: Adventurer, position: (int, int)):
         """ Teleports an agent to a given position (might be usefull for animations)"""
@@ -31,51 +41,30 @@ class Dungeon(object):
         assert 0 <= i < self.n and 0 <= j < self.m, "can't teleport outside of the dungeon"
         assert self.map[position] != Cell.wall, "can't teleport in a wall"
         agent.pos = position
-        self.enter(agent, self.map[agent.pos])
-
-    # ────────────────────── is that dungeon winnable ? ────────────────────── #
-    def __is_winnable(self, portals: bool= False):
-        """
-        Tests if the dungeon is winnable,
-        i.e: there exists a path from the start to the golden key, from the
-        golden key to the treasure and from the treasure to the start
-
-        @param portals: [bool] authorizes the use of random portals in the path
-        @return cool: True if the path exists under the given conditions
-        """
-        astar = AStar() if portals else \
-                AStar(unreachable=(Cell.wall, Cell.crack, Cell.magic_portal))
-        astar.load_map(self.map)
-        key, treasure, start = None, (0, 0), (self.n - 1, self.m - 1)
-        for h in range(self.m * self.n):
-            if self.map[h] == Cell.golden_key:
-                key = (h // self.m, h % self.m)
-        path_to_key      = astar.process_shortest_path(start, key)
-        path_to_treasure = astar.process_shortest_path(key, treasure)
-        path_back        = astar.process_shortest_path(treasure, start)
-
-        # for path_str in ('path_to_key', 'path_to_treasure', 'path_back'):
-            # path = locals()[path_str]
-            # if path:
-                # print((' * ' + path_str + ' * ').center(4 * self.m + 1, '-'))
-                # astar.display_path(path)
-        return bool(path_to_key) and bool(path_to_treasure) and bool(path_back)
+        self.caption += '\n'
+        return self.enter(agent, self.map[agent.pos])
 
     # ─────────────────────────── entering a cell ──────────────────────────── #
     def enter(self, agent: Adventurer, cell: Cell):
         """
         Performs the most simple cells tasks, and delegates to appropriate
         functions if needed
-        """
-        assert cell != Cell.wall, "wall cells should never be entered"
 
+        @return an int representing the reward of the move
+        """
+        # assert cell != Cell.wall, "wall cells should never be entered"
+
+        # -------------- walls bounce back to starting position -------------- #
+        if cell == Cell.wall:
+            self.caption += "Bounced against a wall ... Back to start !"
+            return self.teleport(agent, (self.n - 1, self.m - 1))
         # ---------------- items are treated in the same way ----------------- #
-        if cell == Cell.golden_key or cell == Cell.magic_sword:
+        elif cell == Cell.golden_key or cell == Cell.magic_sword:
             if agent.has_item(cell):
                 self.caption += "Can't pick up another {}, already have one".format(cell.name)
             else:
                 self.caption += "Picked up an item ({}) !!".format(cell.name)
-            agent.acquire_item(cell)
+                agent.acquire_item(cell)
         # ------------------ treasure is particular, though ------------------ #
         elif cell == Cell.treasure and agent.has_item(Cell.golden_key):
             self.caption += "Got the treasure !"
@@ -84,12 +73,12 @@ class Dungeon(object):
         elif cell == Cell.magic_portal:
             valid_cell = self.map.random_cell_dist()
             self.caption += "STARGAAAATE : {} → {}".format(agent.pos, valid_cell)
-            self.teleport(agent, valid_cell)
+            return self.teleport(agent, valid_cell)
         elif cell == Cell.moving_platform:
             valid_neighbor = self.map.random_cell_dist(agent.pos, 1)
             (nx, ny), (x, y) = valid_neighbor, agent.pos
             self.caption += "Woops ! It moves ! (teleported to {})".format(Direction((nx - x, ny - y)).name)
-            self.teleport(agent, valid_neighbor) # adjacent cell <=> Manhattan dist of 1
+            return self.teleport(agent, valid_neighbor) # adjacent cell <=> Manhattan dist of 1
         # ---------------------- oh, CRACK, you're dead ---------------------- #
         elif cell == Cell.crack:
             self.caption += "DAMN ! CRACK !!! I'm dead."
@@ -103,7 +92,7 @@ class Dungeon(object):
                 self.kill(agent) # 10% : death
             elif p < 0.4:
                 self.caption += "Back to start. (tunneled :] )"
-                self.teleport(agent, (self.n - 1, self.m - 1)) # 30% : back to start
+                return self.teleport(agent, (self.n - 1, self.m - 1)) # 30% : back to start
             else:
                 self.caption += "But it's ineffective."
             # 60% : nothing
@@ -112,22 +101,25 @@ class Dungeon(object):
             # no fight for the brave wielding a sword
             self.caption += "Enemy in sight ! "
             p = random() # random floating number in [0, 1[
-            if p >= Dungeon.p_enemy: # the player is defeated (1 - p_enemy)%
+            if p < Dungeon.p_enemy: # the player is victorious (p_enemy)%
+                self.caption += "Easily defeated."
+            else:
                 self.caption += "Woops, I'm dead"
                 self.kill(agent)
-            else:
-                self.caption += "Easily defeated."
         elif cell == Cell.enemy:
             self.caption += "BIM ! BAM ! MAGIC SWORD IN YOUR FACE !"
         # ------------ returning to the start (with the treasure) ------------ #
         elif cell == Cell.start and agent.has_item(Cell.treasure):
             self.caption += "I WON. !!!"
             self.victory(agent)
+            return 1
+
+        # ───────────── handle the reward in various situations ────────────── #
+        return -1 if not agent.alive else 0
 
     # ────────────────────────── victory and defeat ────────────────────────── #
     def victory(self, agent: Adventurer):
         """ Method to restart the simulation and handle a victory """
-        # @TODO: code this
         self.over = True
 
     def defeat(self):

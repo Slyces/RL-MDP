@@ -6,7 +6,7 @@ from utils import vprint
 class Adventurer(object):
     """ Adventurer for the MDP game. """
 
-    def __init__(self, i: int, j: int, name='Remi'):
+    def __init__(self, i: int, j: int, n: int, m: int, name='Remi'):
         """
         Initializes an adventurer at position (i, j)
             - where i in the row and j the column
@@ -15,7 +15,37 @@ class Adventurer(object):
         self.name = name
         self.alive = True
         self.i, self.j = i, j
+        self.n, self.m = n, m
         self.__items = []
+
+    # ──────────────── get the id number of the current state ──────────────── #
+    @property
+    def state_id(self):
+        """
+        Returns a number between 0 and 2 * 3 * n * m (inclusive)
+            where n & m are the size of the current dungeon
+
+        (s, t, c):
+            - s : 1 if I have a sword, else 0
+            - t : 2 if I have the treasure (and the key)
+                  1 if I have the key
+                  0 else
+            - c : id of the current position
+        """
+        swords = 2 # number of states considering the sword only
+        treasure = 3 # number of states considering treasure and key only
+        cells = self.n * self.m # number of states considering the position
+
+        treasure_value = 0
+        if self.has_item(Cell.golden_key): treasure_value = 1
+        elif self.has_item(Cell.treasure): treasure_value = 2
+
+        return self.has_item(Cell.magic_sword) * treasure * cells + \
+                treasure_value * cells + self.cell_id
+
+    @property
+    def cell_id(self):
+        return self.i * self.m + self.j
 
     # ─────────────────────── death of the adventurer ──────────────────────── #
     def kill(self):
