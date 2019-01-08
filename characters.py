@@ -1,6 +1,8 @@
 # ───────────────────────────────── imports ────────────────────────────────── #
-from dungeon_map import Direction
+from dungeon_map import Direction, Cell
 from utils import vprint
+
+
 # ──────────────────────────────────────────────────────────────────────────── #
 
 # ───────────────────── state object for a n x m dungeon ───────────────────── #
@@ -17,8 +19,8 @@ class State(object):
         State.n, State.m, State.max_id = n, m, n * m * State.swords * State.treasures
 
     # ───────────────────────────── constructor ────────────────────────────── #
-    def __init__(self, sword: int= None, treasure: int= None, position: int= None,
-            s_id: int= None):
+    def __init__(self, sword: int = None, treasure: int = None, position: int = None,
+                 s_id: int = None):
         """
         Creates a state object. Two way to initialze:
             - Using the 3 separate values composing a state:
@@ -30,7 +32,7 @@ class State(object):
                 State(s_id=14) # must use the keyword
         """
         assert (sword is not None and treasure is not None and position is not None) or \
-                s_id is not None
+               s_id is not None
         if s_id is not None:
             self.s_id = s_id
             self.word, self.treasures, self.position = State.id_to_state(s_id)
@@ -41,14 +43,14 @@ class State(object):
     # ──────────────── static conversions : state <--> values ──────────────── #
     @staticmethod
     def id_to_state(s_id: int):
-        position = s_id % (n * m)
-        treasure = (s_id // (n * m)) % State.treasures
-        sword = (s_id // (n * m * State.treasures)) % State.swords
+        position = s_id % (State.n * State.m)
+        treasure = (s_id // (State.n * State.m)) % State.treasures
+        sword = (s_id // (State.n * State.m * State.treasures)) % State.swords
         return sword, treasure, position
 
     @staticmethod
     def state_to_id(sword: int, treasure: int, position: int):
-        return sword * State.treasures * n * m + treasure * n * m + position
+        return sword * State.treasures * State.n * State.m + treasure * State.n * State.m + position
 
     # ───────────────────────── some usefull getters ───────────────────────── #
     @property
@@ -59,9 +61,12 @@ class State(object):
     def j(self):
         return self.position % State.m
 
+
 # ────────────────────── state factory to create states ────────────────────── #
 def state_factory(n, m):
     """ Creates a State class configured with the right size (n & m) """
+    pass
+
 
 # ──────────────────────────────── adventurer ──────────────────────────────── #
 class Adventurer(object):
@@ -78,7 +83,6 @@ class Adventurer(object):
         self.i, self.j = i, j
         self.n, self.m = n, m
         self.__items = []
-
 
     # ───────────────────────── getter for the state ───────────────────────── #
     @property
@@ -125,11 +129,9 @@ class Adventurer(object):
         He will choose the actions to perform during his turn, (moving).
         Returns the direction chosen (North, East, South, West)
         """
-        return Directions.NORTH
+        return Direction.NORTH
 
-    def process_reward(self, state, action: Direction, reward: float):
-        """ The agent processes the reward obtained while performing an action """
-        pass
+
 
     # ──────────────────────────── magic methods ───────────────────────────── #
     def __repr__(self):
@@ -139,4 +141,18 @@ class Adventurer(object):
     @property
     def infos(self):
         return '{} items {} [{}]'.format(self.name,
-                set([item.value for item in self.__items]),'ALIVE' if self.alive else 'DEAD')
+                                         set([item.value for item in self.__items]), 'ALIVE' if self.alive else 'DEAD')
+
+
+class AdventurerLearning(Adventurer):
+
+    def __init__(self, i: int, j: int, n: int, m: int, name='Remi'):
+        super().__init__(i, j, n, m, name)
+
+
+
+
+    def process_reward(self, state, action: Direction, reward: float):
+        """ The agent processes the reward obtained while performing an action """
+
+        pass
