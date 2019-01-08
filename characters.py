@@ -3,6 +3,67 @@ from dungeon_map import Direction
 from utils import vprint
 # ──────────────────────────────────────────────────────────────────────────── #
 
+# ───────────────────── state object for a n x m dungeon ───────────────────── #
+class State(object):
+    """ State of the MDP as designed in the dungeon """
+
+    # ────────────────────────── static attributes ─────────────────────────── #
+    n, m, max_id = 0, 0, 0
+    swords = 2
+    treasures = 3
+
+    def configure(n: int, m: int):
+        """ Configures the static parameters of the class """
+        State.n, State.m, State.max_id = n, m, n * m * State.swords * State.treasures
+
+    # ───────────────────────────── constructor ────────────────────────────── #
+    def __init__(self, sword: int= None, treasure: int= None, position: int= None,
+            s_id: int= None):
+        """
+        Creates a state object. Two way to initialze:
+            - Using the 3 separate values composing a state:
+
+                State(sword=0, treasure=1, position=4) <=> State(0, 1, 4)
+
+            - Using the state id:
+
+                State(s_id=14) # must use the keyword
+        """
+        assert (sword is not None and treasure is not None and position is not None) or \
+                s_id is not None
+        if s_id is not None:
+            self.s_id = s_id
+            self.word, self.treasures, self.position = State.id_to_state(s_id)
+        else:
+            self.sword, self.treasure, self.position = sword, treasure, position
+            self.s_id = State.id_to_state(sword, treasure, position)
+
+    # ──────────────── static conversions : state <--> values ──────────────── #
+    @staticmethod
+    def id_to_state(s_id: int):
+        position = s_id % (n * m)
+        treasure = (s_id // (n * m)) % State.treasures
+        sword = (s_id // (n * m * State.treasures)) % State.swords
+        return sword, treasure, position
+
+    @staticmethod
+    def state_to_id(sword: int, treasure: int, position: int):
+        return sword * State.treasures * n * m + treasure * n * m + position
+
+    # ───────────────────────── some usefull getters ───────────────────────── #
+    @property
+    def i(self):
+        return self.position // State.m
+
+    @property
+    def j(self):
+        return self.position % State.m
+
+# ────────────────────── state factory to create states ────────────────────── #
+def state_factory(n, m):
+    """ Creates a State class configured with the right size (n & m) """
+
+# ──────────────────────────────── adventurer ──────────────────────────────── #
 class Adventurer(object):
     """ Adventurer for the MDP game. """
 
@@ -18,31 +79,16 @@ class Adventurer(object):
         self.n, self.m = n, m
         self.__items = []
 
-    # ──────────────── get the id number of the current state ──────────────── #
+
+    # ───────────────────────── getter for the state ───────────────────────── #
     @property
-    def state_id(self):
-        """
-        Returns a number between 0 and 2 * 3 * n * m (inclusive)
-            where n & m are the size of the current dungeon
+    def state(self):
+        treasure = 0
+        if self.has_item(Cell.golden_key): treasure = 1
+        if self.has_item(Cell.treasure): treasure = 2
+        return State(self.has_item(Cell.magic_sword), treasure, self.cell_id)
 
-        (s, t, c):
-            - s : 1 if I have a sword, else 0
-            - t : 2 if I have the treasure (and the key)
-                  1 if I have the key
-                  0 else
-            - c : id of the current position
-        """
-        swords = 2 # number of states considering the sword only
-        treasure = 3 # number of states considering treasure and key only
-        cells = self.n * self.m # number of states considering the position
-
-        treasure_value = 0
-        if self.has_item(Cell.golden_key): treasure_value = 1
-        elif self.has_item(Cell.treasure): treasure_value = 2
-
-        return self.has_item(Cell.magic_sword) * treasure * cells + \
-                treasure_value * cells + self.cell_id
-
+    # ────────────────────────── getter for cell id ────────────────────────── #
     @property
     def cell_id(self):
         return self.i * self.m + self.j
