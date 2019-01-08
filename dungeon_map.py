@@ -54,8 +54,8 @@ class DungeonMap(object):
         @param portals: [bool] authorizes the use of random portals in the path
         @return cool: True if the path exists under the given conditions
         """
-        astar = AStar(unreachable=(Cell.wall, Cell.crack)) if portals else \
-                AStar(unreachable=(Cell.wall, Cell.crack, Cell.magic_portal))
+        astar = AStar(unreachable = (Cell.wall, Cell.crack)) if portals else \
+                AStar(unreachable = (Cell.wall, Cell.crack, Cell.magic_portal))
         astar.load_map(self)
         key, treasure, start = None, (0, 0), (self.n - 1, self.m - 1)
         for h in range(self.m * self.n):
@@ -93,7 +93,6 @@ class DungeonMap(object):
         if 'dist' = -1, finds a random valid cell in the whole map
         """
         candidates = list()
-        a, b = start
         for h in range(self.n * self.m):
             pos = (h // self.m, h % self.m)
             if (dist < 0 or 0 < self.distance(start, pos) <= dist) and self[pos] != Cell.wall:

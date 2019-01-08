@@ -1,3 +1,4 @@
+# encoding: utf-8
 # ───────────────────────────────── imports ────────────────────────────────── #
 from kernel import Dungeon, Direction
 from time import sleep
