@@ -36,7 +36,7 @@ class State(object):
             self.word, self.treasures, self.position = State.id_to_state(s_id)
         else:
             self.sword, self.treasure, self.position = sword, treasure, position
-            self.s_id = State.id_to_state(sword, treasure, position)
+            self.s_id = State.state_to_id(sword, treasure, position)
 
     # ──────────────── static conversions : state <--> values ──────────────── #
     @staticmethod
@@ -48,6 +48,7 @@ class State(object):
 
     @staticmethod
     def state_to_id(sword: int, treasure: int, position: int):
+        n, m = State.n, State.m
         return sword * State.treasures * n * m + treasure * n * m + position
 
     # ───────────────────────── some usefull getters ───────────────────────── #
@@ -58,6 +59,14 @@ class State(object):
     @property
     def j(self):
         return self.position % State.m
+
+    @i.setter
+    def i(self, v: int):
+        self.position = v * State.m + self.j
+
+    @j.setter
+    def j(self, v: int):
+        self.position = self.i + v
 
 # ────────────────────── state factory to create states ────────────────────── #
 def state_factory(n, m):
