@@ -70,10 +70,8 @@ class State(object):
     def j(self, v: int):
         self.position = self.i + v
 
-# ────────────────────── state factory to create states ────────────────────── #
-def state_factory(n, m):
-    """ Creates a State class configured with the right size (n & m) """
-    pass
+    def __str__(self):
+        return "<S:{},T:{},p:({},{})>".format(self.sword, self.treasure, self.i, self.j)
 
 
 # ──────────────────────────────── adventurer ──────────────────────────────── #
