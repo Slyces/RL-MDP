@@ -4,11 +4,11 @@ import csv
 from interface import TextInterface
 
 if __name__ == '__main__':
-    game = kernel.Dungeon(2,3)
+    game = kernel.Dungeon(8,8)
     inter = TextInterface(game)
     player, = game.agents
 
-    for i in range(5):
+    for i in range(500):
         q_table = player.Q
         game.reset()
         player.load_Qtable(q_table)
@@ -18,8 +18,9 @@ if __name__ == '__main__':
             reward = game.move(player, action)
             new_state = player.state
             player.process_reward(old_state, new_state, action, reward)
-    #inter.display()
+        if i % 100 == 0:
+            print(i)
 
-    with open('Qtable.csv', 'w') as csvFile:
+    with open("Qtable.csv", 'w') as csvFile:
         writer = csv.writer(csvFile)
-        writer.writerows(player.Q.q_table)
+        writer.writerows(player.Q)

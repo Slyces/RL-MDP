@@ -166,7 +166,6 @@ class AdventurerLearning(Adventurer):
         self.Q = np.zeros((State.max_id, 4))
 
     def policy(self):
-        print(self.state)
         return Qlearning.policy(self.Q, self.state)
 
     def process_reward(self, old_state: State, new_state: State, action: Direction, reward: float):
@@ -177,18 +176,19 @@ class AdventurerLearning(Adventurer):
     def load_Qtable(self, tab):
         self.Q = tab
 
+
 class Qlearning(object):
     beta = 8
     learning_rate = 0.4
     gamma = 0.9
 
-    def policy(self, q_table: float, state: State):
+    def policy(q_table: float, state: State):
         row = q_table[state.id]
-        softmax_distribution = self.softmax(row)
-        result = self.random_index(softmax_distribution)
-        return self.int_to_direction(result)
+        softmax_distribution = Qlearning.softmax(row)
+        result = Qlearning.random_index(softmax_distribution)
+        return Qlearning.int_to_direction(result)
 
-    def softmax(self, array):
+    def softmax(array):
         values = np.zeros(len(array))
         sum_array = 0.0
         for value in array:
@@ -197,7 +197,7 @@ class Qlearning(object):
             values[i] = np.exp(array[i] * Qlearning.beta) / sum_array
         return values
 
-    def random_index(self, array):
+    def random_index(array):
         p = random.random()
         sum = 0.0
         i = 0
@@ -206,25 +206,22 @@ class Qlearning(object):
             i += 1
         return i - 1
 
-    def update(self, q_table: float, old_state: State, new_state: State, action: Direction, reward: float):
-
+    def update(q_table: float, old_state: State, new_state: State, action: Direction, reward: float):
         currentRow = np.sort(q_table[new_state.id].copy())
 
-        action_index = self.direction_to_int(action)
+        action_index = Qlearning.direction_to_int(action)
         delta = reward + Qlearning.gamma * currentRow[len(currentRow) - 1] - q_table[old_state.id][action_index]
 
         old = q_table[old_state.id][action_index]
-
         q_table[old_state.id][action_index] += Qlearning.learning_rate * delta
-
+        q_table[old_state.id][action_index] = round(q_table[old_state.id][action_index], 5)
         new = q_table[old_state.id][action_index]
 
-        print(old, new)
         return q_table
 
     # ------------------------- Usefull def --------------------------#
 
-    def direction_to_int(self, direction: Direction):
+    def direction_to_int(direction: Direction):
         if direction == Direction.NORTH:
             return 0
         elif direction == Direction.EAST:
@@ -234,7 +231,7 @@ class Qlearning(object):
         else:
             return 3
 
-    def int_to_direction(self, number: int):
+    def int_to_direction(number: int):
         if number == 0:
             return Direction.NORTH
         elif number == 1:

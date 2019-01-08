@@ -126,6 +126,7 @@ class Dungeon(object):
     # ────────────────────────────────── Reset ─────────────────────────────── #
     def reset(self):
         self.map.reset()
+        self.over = False
         for agent in self.agents:
             agent.reset()
 
