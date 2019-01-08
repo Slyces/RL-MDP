@@ -1,11 +1,11 @@
 # ───────────────────────────────── imports ────────────────────────────────── #
 from dungeon_map import Direction, Cell
 from utils import vprint
+import numpy as np
+import random
 
 
 # ──────────────────────────────────────────────────────────────────────────── #
-
-# ───────────────────── state object for a n x m dungeon ───────────────────── #
 class State(object):
     """ State of the MDP as designed in the dungeon """
 
@@ -31,14 +31,15 @@ class State(object):
 
                 State(s_id=14) # must use the keyword
         """
+
         assert (sword is not None and treasure is not None and position is not None) or \
                s_id is not None
         if s_id is not None:
-            self.s_id = s_id
+            self.id = s_id
             self.word, self.treasures, self.position = State.id_to_state(s_id)
         else:
             self.sword, self.treasure, self.position = sword, treasure, position
-            self.s_id = State.state_to_id(sword, treasure, position)
+            self.id = State.state_to_id(sword, treasure, position)
 
     # ──────────────── static conversions : state <--> values ──────────────── #
     @staticmethod
@@ -86,9 +87,15 @@ class Adventurer(object):
         """
         self.name = name
         self.alive = True
+        self.init_pos = i, j
         self.i, self.j = i, j
         self.n, self.m = n, m
         self.__items = []
+
+    def reset(self):
+        self.__items = []
+        self.alive = True
+        self.pos = self.init_pos
 
     # ───────────────────────── getter for the state ───────────────────────── #
     @property
@@ -137,7 +144,9 @@ class Adventurer(object):
         """
         return Direction.NORTH
 
-
+    def process_reward(self, oldState: State, newState: State, action: Direction, reward: float):
+        """ The agent processes the reward obtained while performing an action """
+        pass
 
     # ──────────────────────────── magic methods ───────────────────────────── #
     def __repr__(self):
@@ -154,11 +163,83 @@ class AdventurerLearning(Adventurer):
 
     def __init__(self, i: int, j: int, n: int, m: int, name='Remi'):
         super().__init__(i, j, n, m, name)
+        self.Q = np.zeros((State.max_id, 4))
 
+    def policy(self):
+        print(self.state)
+        return Qlearning.policy(self.Q, self.state)
 
-
-
-    def process_reward(self, state, action: Direction, reward: float):
+    def process_reward(self, old_state: State, new_state: State, action: Direction, reward: float):
         """ The agent processes the reward obtained while performing an action """
-
+        self.Q = Qlearning.update(self.Q, old_state, new_state, action, reward)
         pass
+
+    def load_Qtable(self, tab):
+        self.Q = tab
+
+class Qlearning(object):
+    beta = 8
+    learning_rate = 0.4
+    gamma = 0.9
+
+    def policy(self, q_table: float, state: State):
+        row = q_table[state.id]
+        softmax_distribution = self.softmax(row)
+        result = self.random_index(softmax_distribution)
+        return self.int_to_direction(result)
+
+    def softmax(self, array):
+        values = np.zeros(len(array))
+        sum_array = 0.0
+        for value in array:
+            sum_array += np.exp(value * Qlearning.beta)
+        for i in range(len(values)):
+            values[i] = np.exp(array[i] * Qlearning.beta) / sum_array
+        return values
+
+    def random_index(self, array):
+        p = random.random()
+        sum = 0.0
+        i = 0
+        while sum < p:
+            sum += array[i]
+            i += 1
+        return i - 1
+
+    def update(self, q_table: float, old_state: State, new_state: State, action: Direction, reward: float):
+
+        currentRow = np.sort(q_table[new_state.id].copy())
+
+        action_index = self.direction_to_int(action)
+        delta = reward + Qlearning.gamma * currentRow[len(currentRow) - 1] - q_table[old_state.id][action_index]
+
+        old = q_table[old_state.id][action_index]
+
+        q_table[old_state.id][action_index] += Qlearning.learning_rate * delta
+
+        new = q_table[old_state.id][action_index]
+
+        print(old, new)
+        return q_table
+
+    # ------------------------- Usefull def --------------------------#
+
+    def direction_to_int(self, direction: Direction):
+        if direction == Direction.NORTH:
+            return 0
+        elif direction == Direction.EAST:
+            return 1
+        elif direction == Direction.SOUTH:
+            return 2
+        else:
+            return 3
+
+    def int_to_direction(self, number: int):
+        if number == 0:
+            return Direction.NORTH
+        elif number == 1:
+            return Direction.EAST
+        elif number == 2:
+            return Direction.SOUTH
+        else:
+            return Direction.WEST

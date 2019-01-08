@@ -1,6 +1,7 @@
+# encoding: utf-8
 # ───────────────────────────────── imports ────────────────────────────────── #
 from random import random
-from characters import Adventurer
+from characters import Adventurer, AdventurerLearning,State
 from dungeon_map import DungeonMap, Direction, Cell, AStar
 import utils
 # ──────────────────────────────────────────────────────────────────────────── #
@@ -14,12 +15,15 @@ class Dungeon(object):
 
     def __init__(self, n: int, m: int, nb_players: int = 1):
         self.n, self.m = n, m
+        State.configure(self.n, self.m)
         self.map = DungeonMap(n, m)
         while not self.winnable:
             self.map = DungeonMap(n, m)
-        self.agents = [Adventurer(n - 1, m - 1, n, m) for i in range(nb_players)]
+        self.agents = [AdventurerLearning(n - 1, m - 1, n, m) for i in range(nb_players)]
         self.over = False
         self.caption = ''
+
+
 
     # ────────────────────── is that dungeon winnable ? ────────────────────── #
     @property
@@ -118,6 +122,12 @@ class Dungeon(object):
 
         # ───────────── handle the reward in various situations ────────────── #
         return -1 if not agent.alive else 0
+
+    # ────────────────────────────────── Reset ─────────────────────────────── #
+    def reset(self):
+        self.map.reset()
+        for agent in self.agents:
+            agent.reset()
 
     # ────────────────────────── victory and defeat ────────────────────────── #
     def victory(self, agent: Adventurer):
