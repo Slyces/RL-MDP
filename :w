@@ -25,112 +25,75 @@ class Dungeon(object):
 
         State.configure(n, m)
 
-    # ────────────────── constructing the transition matrix ────────────────── #
-    def make_transitions(self):
-        n_states = State.max_id + 1 # last state is death
-        n, m = self.n, self.m
-        T = np.zeros((n_states, 4, n_states))
-        S = self.markov_chain()
-        M = self.moving_markov_chain()
-        for sw in range(2):
-            for tr in range(3):
-                for p in range(n * m):
-                    i, j = p // m, p % m
-                    s = State(sw, tr, p)
-                    for a in Direction:
-                        ni, nj = self.map.move((i, j), a)
-                        d_pos = ni * m + nj
-                        s_prime = State(sw, tr, d_pos)
-                        d_cell = self[ni, nj]
-                        if d_cell != Cell.magic_portal and d_cell != Cell.moving_platform:
-                            T[s.id, a, :] = S[s_prime.id, :]
-                        else:
-                            T[s.id, a, :] = self.special_transition(S, M, s_prime)
-
-    def special_transition(self, S: MarkovChain, M: MarkovChain, s_prime: State):
-        pass
-
     # ──────────────────── constructing the markov chain ───────────────────── #
     def markov_chain(self):
-        n_state = State.max_id + 1
+        n_state = State.max_id * 2 + 1
         M = np.zeros((n_state, n_state))
         n, m = self.n, self.m
         death = n_state - 1
-        M[death, death] = 1
+        static = lambda s: State.max_id + s
         for sw in range(2):
             for tr in range(3):
                 for p in range(n * m):
                     i, j = p // m, p % m
                     cell = self.map[i, j]
                     state = State(sw, tr, p)
-                    index = state.id
+                    index = state.s_id
+                    # ───────────── statics states never change ────────────── #
+                    M[static(index), static(index)] = 1
                     # ────────────── empty cell : stay inplace ─────────────── #
-                    if cell == Cell.empty or cell == Cell.start:
-                        M[index, index] = 1
+                    if cell == Cell.empty:
+                        M[index, static(index)] = 1
                     # ───────────── wall : bounce back to start ────────────── #
                     if cell == Cell.wall:
                         state.position = n * m - 1
-                        M[index, state.id] = 1
+                        M[index, static(state.s_id)] = 1
                     # ──────────────── crack : kill instantly ──────────────── #
                     if cell == Cell.crack:
                         M[index, death] = 1
                     # ──────────────────── ennemy : fight ──────────────────── #
                     if cell == Cell.enemy and state.sword:
-                        M[index, index] = 1 # fight won
-                    if cell == Cell.enemy and not state.sword:
-                        M[index, index] = 1 - Dungeon.p_enemy
+                        M[index, static(index)] = 1 # fight won
+                    elif cell == Cell.enemy:
+                        M[index, static(index)] = 1 - Dungeon.p_enemy
                         M[index, death] = Dungeon.p_enemy
                     # ─────────────── magic sword acquisition ──────────────── #
                     if cell == Cell.magic_sword:
                         state.sword = 1
-                        M[index, state.id] = 1
+                        M[index, static(state.s_id)]
                     # ─────────────────── key acquisition ──────────────────── #
                     if cell == Cell.golden_key:
                         state.treasure = max(state.treasure, 1) # get the key if you didn't
                         # have it, else keep the treasure
-                        M[index, state.id] = 1
+                        M[index, static(state.s_id)] = 1
                     # ───────────────── treasure acquisition ───────────────── #
                     if cell == Cell.treasure:
                         state.treasure = 2 if state.treasure >= 1 else 0
-                        M[index, state.id] = 1
+                        M[index, static(state.s_id)] = 1
                     # ─────── trap : back to start, death, or nothing ──────── #
                     if cell == Cell.trap:
-                        M[index, index] = 0.6 # nothing happens
+                        M[index, static(index)] = 0.6 # nothing happens
                         state.position = n * m - 1
-                        M[index, state.id] = 0.3 # tunnel to start
+                        M[index, static(state.s_id)] = 0.3 # tunnel to start
                         M[index, death] = 0.1 # death
-                    if cell == Cell.magic_portal or cell == Cell.moving_platform:
-                        M[index, index] = 1
-
+                    # ─────────────────── moving platform ──────────────────── #
+                    # the first transition not moving to 'static' states
+                    if cell == Cell.moving_platform:
+                        valid_neighbors = self.map.all_cell_dist((i, j), 1)
+                        for (k, l) in valid_neighbors:
+                            state.position = k * m + l
+                            M[index, state.s_id] = 1 / len(valid_neighbors)
+                    # ────────────────────── teleporter ────────────────────── #
+                    if cell == Cell.magic_portal:
+                        valid_cells = self.map.all_cell_dist((i, j), -1)
+                        for (k, l) in valid_cells:
+                            state.position = k * m + l
+                            M[index, state.s_id] = 1 / len(valid_cells)
         ones = np.ones((n_state, 1))
-        assert all(np.matmul(M, ones) == ones)
-        return M
+        print(M.shape, ones.shape, (M * ones).shape)
+        # assert (M * np.ones((n_state, 1)) == np.ones((n_state, 1))).all()
+        # return M
 
-    def moving_markov_chain(self):
-        """
-        Creates a markov chain with grid cells as states, to determine the
-        probability to be in a state when using a recurrent transition (portal,
-        moving-platform)
-        """
-        n, m = self.n, self.m
-        n_state = n * m
-        M = np.zeros((n_state, n_state))
-        for p in range(n * m):
-            i, j = p // m, p % m
-            cell = self.map[i, j]
-            if cell == Cell.moving_platform:
-                valid_neighbors = self.map.all_cell_dist((i, j), 1)
-                for (k, l) in valid_neighbors:
-                    p_next = k * m + l
-                    M[p, p_next] = 1 / len(valid_neighbors)
-            elif cell == Cell.magic_portal:
-                valid_cells = self.map.all_cell_dist((i, j), -1)
-                for (k, l) in valid_cells:
-                    p_next = k * m + l
-                    M[p, p_next] = 1 / len(valid_cells)
-            else:
-                M[p, p] = 1
-        return M
 
     # ────────────────────── is that dungeon winnable ? ────────────────────── #
     @property
@@ -304,18 +267,6 @@ class Dungeon(object):
 
 # ──────────────────────────────── executable ──────────────────────────────── #
 if __name__ == '__main__':
-    np.set_printoptions(precision=5, linewidth=200)
-
-    custom_game = Dungeon(4, 4)
-    p = Cell.magic_portal
-    s = Cell.magic_sword
-    m = Cell.moving_platform
-    t = Cell.treasure
-    k = Cell.golden_key
-
-    custom_game.map.load([t, p, p, s, p, p, m, p, m, p, m, m, k, m, p, Cell.start])
-
-    print(custom_game)
-
-    M = custom_game.moving_markov_chain()
+    game = Dungeon(3, 3)
+    M = game.markov_chain()
     print(M)

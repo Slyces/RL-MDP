@@ -34,11 +34,11 @@ class State(object):
         assert (sword is not None and treasure is not None and position is not None) or \
                s_id is not None
         if s_id is not None:
-            self.s_id = s_id
+            self.id = s_id
             self.word, self.treasures, self.position = State.id_to_state(s_id)
         else:
             self.sword, self.treasure, self.position = sword, treasure, position
-            self.s_id = State.state_to_id(sword, treasure, position)
+            self.id = State.state_to_id(sword, treasure, position)
 
     # ──────────────── static conversions : state <--> values ──────────────── #
     @staticmethod

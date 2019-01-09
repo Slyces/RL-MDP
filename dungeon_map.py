@@ -10,6 +10,18 @@ class Direction(Enum):
     SOUTH = (1, 0)
     WEST = (0, -1)
 
+    @staticmethod
+    def reverse(direction):
+        return {Direction.NORTH: Direction.SOUTH,
+                Direction.SOUTH: Direction.NORTH,
+                Direction.WEST: Direction.EAST,
+                Direction.EAST: Direction.WEST}[direction]
+
+    @staticmethod
+    def to_int(direction):
+        return [Direction.NORTH, Direction.EAST, Direction.SOUTH,
+                Direction.WEST].index(direction)
+
 # ─────────────────────────────── Cells Types ──────────────────────────────── #
 class Cell(Enum):
     pretty_cells = True
@@ -86,11 +98,11 @@ class DungeonMap(object):
                 g.count(Cell.golden_key) >= 1 and \
                 g.count(Cell.magic_sword) >= 1
 
-    # ────────────────────── find random non-wall cells ────────────────────── #
-    def random_cell_dist(self, start: (int, int)= (0, 0), dist: int= -1):
+    # ──────────── find all non-wall cells at a certain distance ───────────── #
+    def all_cell_dist(self, start: (int, int)= (0, 0), dist: int= -1):
         """
-        Finds a random valid cell within a 'dist' manhattan distance of the start
-        if 'dist' = -1, finds a random valid cell in the whole map
+        Finds all valid cells within a 'dist' manhattan distance of the start
+        if 'dist' = -1, finds all valid cells in the whole map
         """
         candidates = list()
         for h in range(self.n * self.m):
@@ -98,7 +110,15 @@ class DungeonMap(object):
             if (dist < 0 or 0 < self.distance(start, pos) <= dist) and self[pos] != Cell.wall:
                 candidates.append(pos)
         assert len(candidates) > 0, "empty candidates for a random cell"
-        return rchoice(candidates)
+        return candidates
+
+    # ────────────────────── find random non-wall cells ────────────────────── #
+    def random_cell_dist(self, start: (int, int)= (0, 0), dist: int= -1):
+        """
+        Finds a random valid cell within a 'dist' manhattan distance of the start
+        if 'dist' = -1, finds a random valid cell in the whole map
+        """
+        return rchoice(self.all_cell_dist(start, dist))
 
     # ────────────────────────── manhattan distance ────────────────────────── #
     def distance(self, A: (int, int), B: (int, int)):
