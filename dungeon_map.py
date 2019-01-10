@@ -237,9 +237,7 @@ class DungeonMap(object):
                 line = file.readline()
                 self.n, self.m = [int(x) for x in line.split(',')]
                 line = file.readline()
-                print(line)
                 self.__grid = [Cell.to_load(c) for c in line]
-                print(self.__grid)
         except FileNotFoundError:
             print("File to load don't exist !")
         self.init_map = self.__grid
