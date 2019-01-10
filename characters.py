@@ -32,7 +32,6 @@ class State(object):
 
                 State(s_id=14) # must use the keyword
         """
-
         assert (sword is not None and treasure is not None and position is not None) or \
                s_id is not None
         self.__sword, self.__treasure, self.__position, self.__id = -1, -1, -1, -1
@@ -108,7 +107,9 @@ class State(object):
         self.position = self.i + v
 
     def __str__(self):
-        return "<S:{},T:{},p:({},{})>".format(self.sword, self.treasure, self.i, self.j)
+        sw = '理'
+        tr = 'ﰤ'
+        return "<S: {} ,T: {} ,p: ({},{})>".format(sw[self.sword], tr[self.treasure], self.i, self.j)
 
 
 # ──────────────────────────────── adventurer ──────────────────────────────── #

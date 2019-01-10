@@ -42,7 +42,8 @@ class TextInterface(object):
     # ─────────────────── display the state of the dungeon ─────────────────── #
     def display(self):
         os.system('clear')
-        print(self.dungeon)
+        # print(self.dungeon)
+        print(self.dungeon.colored_str())
         print(self.infos)
         print(self.dungeon.caption)
         self.dungeon.caption = ''

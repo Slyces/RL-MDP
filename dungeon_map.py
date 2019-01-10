@@ -4,6 +4,7 @@ from random import choice as rchoice, randint
 from numpy.random import choice as npchoice
 import utils
 # ─────────────────────────── Cardinal Directions ──────────────────────────── #
+pretty_cells = True
 class Direction(Enum):
     NORTH = (-1, 0)
     EAST = (0, 1)
@@ -17,14 +18,13 @@ class Direction(Enum):
                 Direction.WEST: Direction.EAST,
                 Direction.EAST: Direction.WEST}[direction]
 
-    @staticmethod
-    def to_int(direction):
+    @property
+    def to_int(self):
         return [Direction.NORTH, Direction.EAST, Direction.SOUTH,
-                Direction.WEST].index(direction)
+                Direction.WEST].index(self)
 
 # ─────────────────────────────── Cells Types ──────────────────────────────── #
 class Cell(Enum):
-    pretty_cells = True
     empty           = '  '[pretty_cells]
     start           = '◉◉'[pretty_cells]
     wall            = '■■'[pretty_cells]
@@ -119,6 +119,19 @@ class DungeonMap(object):
         if 'dist' = -1, finds a random valid cell in the whole map
         """
         return rchoice(self.all_cell_dist(start, dist))
+
+    # ───────── find the neighbors of a cell (with their direction) ────────── #
+    def neighbors(self, i: int, j: int):
+        """
+        @param i: int= row of the target cell
+        @param j: int= col of the target cell
+
+        @return generator (pos, direction) for each neighbor of (i, j)
+        """
+        for direction in Direction:
+            ni, nj = self.move((i, j), direction)
+            if (ni, nj) != (i, j):
+                yield ((ni, nj), direction)
 
     # ────────────────────────── manhattan distance ────────────────────────── #
     def distance(self, A: (int, int), B: (int, int)):

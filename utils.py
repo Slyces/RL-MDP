@@ -23,7 +23,7 @@ def add_color(string: str, fg: Color= Color.white):
     Colors a string using escape characters
         (works in linux terms, untested for windows)
     """
-    c = "\x1b[{};{};{}m".format(0, fg.value, 40) # color escape code
+    c = "\x1b[{};{};{}m".format(0, fg.value, 40 if fg == Color.white else 50) # color escape code
     e = "\x1b[0m" # endline
     return c + string + e
 

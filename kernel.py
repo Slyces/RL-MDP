@@ -29,29 +29,60 @@ class Dungeon(object):
 
         State.configure(n, m)
 
+    # ─────────── display a transition matric in a readable output ─────────── #
+    def display_transition(self, s: State, a: Direction):
+        """
+        Displays a transition for a given state and action
+        """
+        arr = ['↑', '→', '↓', '←'][a.to_int]
+        print('{s},{arr}:'.format(s=s, arr=arr))
+        tr = self.make_transition_matrix()[s.id, a.to_int]
+        for (i, p) in enumerate(tr):
+            if p > 0:
+                print('- {p:4.2%}: {st}'.format(p=p, st=State(s_id=i)))
+
     # ────────────────── constructing the transition matrix ────────────────── #
-    def make_transitions(self):
+    def make_transition_matrix(self):
+        """
+        Creates the complete transition matrix, including every possible state
+        and action, and the transition from one to another.
+
+        Contains all the possible values of T(s, a, s'), the probability to go
+        from s to s' by doing a.
+        """
         n_states = State.max_id + 1 # last state is death
         n, m = self.n, self.m
         T = np.zeros((n_states, 4, n_states), np.float32)
         S = self.markov_chain()
         M = self.moving_markov_chain()
+        # ────────────────────────── for each state ────────────────────────── #
         for sw in range(2):
             for tr in range(3):
                 for p in range(n * m):
                     i, j = p // m, p % m
                     s = State(sw, tr, p)
-                    for a in Direction:
-                        ni, nj = self.map.move((i, j), a)
-                        d_pos = ni * m + nj
-                        s_prime = State(sw, tr, d_pos)
-                        d_cell = self[ni, nj]
-                        if d_cell != Cell.magic_portal and d_cell != Cell.moving_platform:
-                            T[s.id, a, :] = S[s_prime.id, :]
-                        else:
-                            T[s.id, a, :] = self.special_transition(S, M, s_prime)
+                    cell = self.map[i, j]
+                    # ───────── find the transitions from that state ───────── #
+                    if cell == Cell.magic_portal or cell == Cell.moving_platform:
+                        transitions = self.special_transition(S, M, s)
+                    else:
+                        transitions = S[s.id, :]
+                    # ─────── find the state - actions that lead to it ─────── #
+                    for ((k, l), direction) in self.map.neighbors(i, j):
+                        # if (k,l) is ↑ of (i, j), (i, j) is ↓ of (k, l)
+                        s.position = k * m + l
+                        reverse_dir = Direction.reverse(direction)
+                        T[s.id, reverse_dir.to_int, :] = transitions
+        for sid in range(n_states):
+            for a in Direction:
+                s = State(s_id=sid)
+                if sum(T[s.id, a.to_int]) == 0:
+                    mu = np.zeros(n_states, np.float32)
+                    mu[s.id] = 1
+                    T[s.id, a.to_int, :] = S.iterate(mu)
+        return T
 
-
+    # ──────────────── handling moving platforms and portals ───────────────── #
     def special_transition(self, S: MarkovChain, M: MarkovChain, state: State):
         """
         @param S: Markovchain= a markov chain representing the stable states of
@@ -65,7 +96,7 @@ class Dungeon(object):
 
         @param M: Markochain= a markov chain representing the 'moving states' of
                   the dungeon, i.e. the states that can be recursive. those
-                  states, such as the moving platform and the portal, are just 
+                  states, such as the moving platform and the portal, are just
                   temporary. they lead you to another stable state, or to
                   another moving state that will lead you back elsewhere. they
                   can be infinitely cycling between themselves.
@@ -107,7 +138,7 @@ class Dungeon(object):
         p = state.position
 
         # ────────────── checking that the state given is valid ────────────── #
-        assert self.map[p] in (Cell.magic_portal, Cell.moving_platform) 
+        assert self.map[p] in (Cell.magic_portal, Cell.moving_platform)
 
         # ────────────────── checking for existing results ─────────────────── #
         distrib = np.zeros(n * m, np.float32)
@@ -119,6 +150,7 @@ class Dungeon(object):
             mu = np.zeros(n * m, np.float32)
             mu[p] = 1
             distrib = M.convergence_iteration(mu)
+            self.teleport_distributions[p] = distrib
         assert distrib.shape == (n * m,) and abs(sum(distrib) - 1) < 10e-6
 
         # ───────────────── convert grid positions to state ────────────────── #
@@ -135,7 +167,7 @@ class Dungeon(object):
 
         # ───── iterate once the new states over the rest of the dungeon ───── #
         transition = S.iterate(transition, 1)
-        assert 1 - 10e-6 <= sum(transition) <= 1
+        assert abs(sum(transition) - 1) < 10e-5
         return transition
 
     # ──────────────────── constructing the markov chain ───────────────────── #
@@ -340,6 +372,41 @@ class Dungeon(object):
             self.defeat() # every player is dead
 
     # ──────────────────────────── magic methods ───────────────────────────── #
+    def colored_str(self):
+        from utils import Color, color_grid
+        n, m = self.n, self.m
+        key = None
+        sword = None
+        for p in range(n * m):
+            i, j = p // m, p % m
+            if self.map[i, j] == Cell.golden_key:
+                key = (i, j)
+            if self.map[i, j] == Cell.magic_sword:
+                sword = (i, j)
+        color = {
+                Color.blue: [sword],
+                Color.red: [(0, 0), key],
+                Color.green: [self.agents[0].pos]
+            }
+        grid = ['' for i in range(n * m)]
+        for p in range(n * m):
+            grid[p] = self.map[p].value
+            for (h, agent) in enumerate(self.agents):
+                if agent.cell_id == p:
+                    if h == 0:
+                        grid[p] += '*'
+                    elif h == 1:
+                        grid[p] = '^' + grid[p]
+
+        colored_map = color_grid(grid, (n, m), content_colors=color)
+        legends = []
+        agents_symbols = '*^'
+        for h, agent in enumerate(self.agents):
+            legends.append('{}: agent {}\'s position'.format(agents_symbols[h], h))
+
+        legend = '\n'.join(legends)
+        return colored_map + legend + '\n'
+
     def __str__(self):
         """ adds the position of agents to the string representation """
         agents_symbols = '*^'
@@ -399,31 +466,36 @@ class Dungeon(object):
 if __name__ == '__main__':
     np.set_printoptions(precision=5, linewidth=200)
 
-    custom_game = Dungeon(4, 4)
+    custom_game = Dungeon(4, 3)
+    b = Cell.start
     p = Cell.magic_portal
+    e = Cell.empty
     s = Cell.magic_sword
     m = Cell.moving_platform
     t = Cell.treasure
     k = Cell.golden_key
 
-    custom_game.map.load([t, p, p, s, p, p, m, p, m, p, m, m, k, m, p, Cell.start])
+    # custom_game.map.load([t, p, p, s,
+    #                       p, p, m, p,
+    #                       m, p, m, m,
+    #                       k, m, p, b])
+    custom_game.map.load([t, e, s,
+                          e, m, e,
+                          e, m, e,
+                          k, e, b])
 
     print(custom_game)
 
     S = custom_game.markov_chain()
     M = custom_game.moving_markov_chain()
 
-    sp = State(0, 0, 3)
-    print(sp)
-    tr = np.zeros(State.max_id + 1)
-    tr[sp.id] = 1
-    tr = S.iterate(tr)
+    # print(State(0, 0, 11))
 
-    s = State(0, 0, 1)
+    # tr = custom_game.special_transition(S, M, State(0, 0, 11))
+    # for (i, p) in enumerate(tr):
+        # s = State(s_id=i)
+        # if p > 0:
+            # print('- {:4.2%}: {}'.format(p, s))
 
-    t = custom_game.special_transition(S, M, s)
-
-    for (i, p) in enumerate(t):
-        s = State(s_id= i)
-        if p > 0:
-            print(p, s)
+    T = custom_game.make_transition_matrix()
+    custom_game.display_transition(State(0, 0, 15), Direction.NORTH)
