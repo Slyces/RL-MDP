@@ -338,6 +338,7 @@ class Dungeon(object):
             else:
                 self.caption += "Picked up an item ({}) !!".format(cell.name)
                 agent.acquire_item(cell)
+                return 0.5
         # ------------------ treasure is particular, though ------------------ #
         elif cell == Cell.treasure and agent.has_item(Cell.golden_key):
             self.caption += "Got the treasure !"

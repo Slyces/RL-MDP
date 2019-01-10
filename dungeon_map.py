@@ -26,7 +26,7 @@ class Direction(Enum):
 
 # ─────────────────────────────── Cells Types ──────────────────────────────── #
 class Cell(Enum):
-    pretty_cells = True
+    pretty_cells = False
     empty = '  '[pretty_cells]
     start = '◉◉'[pretty_cells]
     wall = '■■'[pretty_cells]

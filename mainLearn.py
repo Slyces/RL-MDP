@@ -6,11 +6,13 @@ import csv
 from interface import TextInterface
 
 if __name__ == '__main__':
-    game = kernel.Dungeon(4,4)
+    game = kernel.Dungeon(5,4)
     inter = TextInterface(game)
     player, = game.agents
 
-    for i in range(500):
+    game.map.load_map("map.txt")
+
+    for i in range(1000):
         q_table = player.Q
         game.reset()
         player.load_Qtable(q_table)
@@ -34,6 +36,8 @@ if __name__ == '__main__':
         game.move(player, action)
         inter.display()
         time.sleep(2)
+
+    game.map.save_map("map.txt")
 
     with open("Qtable.csv", 'w') as csvFile:
         writer = csv.writer(csvFile)
