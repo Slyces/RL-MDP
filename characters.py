@@ -97,6 +97,9 @@ class AdventurerLearning(Adventurer):
         super().__init__(i, j, n, m, name)
         self.Q = np.zeros((State.max_id, 4))
 
+    def play(self, state: State):
+        return Qlearning.policy(self.Q, state)
+
     def policy(self):
         return Qlearning.policy(self.Q, self.state)
 

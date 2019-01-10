@@ -13,11 +13,12 @@ if __name__ == '__main__':
 
     game.load_map("map.txt")
 
-    for i in range(20):
+    for i in range(6000):
         q_table = player.Q
         game.reset()
         player.load_Qtable(q_table)
         while not game.over:
+            game.caption = ''
             old_state = player.state
             action = player.policy()
             reward = game.move(player, action)
@@ -28,17 +29,16 @@ if __name__ == '__main__':
 
     # -------------------------- regarde le chemin --------------------------- #
     q_table = player.Q
-    game.caption = ''
-    game.reset()
+    # game.reset()
     player.load_Qtable(q_table)
-    inter.display()
-    time.sleep(0.5)
-    while not game.over:
-        action = player.policy()
-        game.move(player, action)
-        inter.display()
-        time.sleep(0.5)
-
+    # inter.display()
+    # time.sleep(0.5)
+    # while not game.over:
+        # action = player.policy()
+        # game.move(player, action)
+        # inter.display()
+        # time.sleep(0.5)
+    inter.play_game()
     game.map.save_map("map.txt")
 
     with open("Qtable.csv", 'w') as csvFile:

@@ -21,7 +21,8 @@ class Direction(Enum):
 
     @staticmethod
     def from_int(value: int):
-        return list(Direction)[value]
+        print(value)
+        return list(Direction)[int(value)]
 
 # ─────────────────────────────── Cells Types ──────────────────────────────── #
 class Cell(Enum):
