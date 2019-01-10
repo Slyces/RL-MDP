@@ -4,7 +4,6 @@ from random import choice as rchoice, randint
 from numpy.random import choice as npchoice
 import utils
 # ─────────────────────────── Cardinal Directions ──────────────────────────── #
-pretty_cells = True
 class Direction(Enum):
     NORTH = (-1, 0)
     EAST = (0, 1)
@@ -18,31 +17,67 @@ class Direction(Enum):
                 Direction.WEST: Direction.EAST,
                 Direction.EAST: Direction.WEST}[direction]
 
-    @property
-    def to_int(self):
+    @staticmethod
+    def to_int(direction):
         return [Direction.NORTH, Direction.EAST, Direction.SOUTH,
-                Direction.WEST].index(self)
+                Direction.WEST].index(direction)
 
 # ─────────────────────────────── Cells Types ──────────────────────────────── #
 class Cell(Enum):
-    empty           = '  '[pretty_cells]
-    start           = '◉◉'[pretty_cells]
-    wall            = '■■'[pretty_cells]
-    enemy           = 'Eﲅ'[pretty_cells]
-    trap            = 'R☠'[pretty_cells]
-    crack           = 'Cﲯ'[pretty_cells]
-    treasure        = 'Tﰤ'[pretty_cells]
-    magic_sword     = 'SS'[pretty_cells]
-    golden_key      = 'K'[pretty_cells]
-    magic_portal    = 'P'[pretty_cells]
+    pretty_cells = True
+    empty = '  '[pretty_cells]
+    start = '◉◉'[pretty_cells]
+    wall = '■■'[pretty_cells]
+    enemy = 'Eﲅ'[pretty_cells]
+    trap = 'R☠'[pretty_cells]
+    crack = 'Cﲯ'[pretty_cells]
+    treasure = 'Tﰤ'[pretty_cells]
+    magic_sword = 'SS'[pretty_cells]
+    golden_key = 'K'[pretty_cells]
+    magic_portal = 'P'[pretty_cells]
     moving_platform = '--'[pretty_cells]
+
+    def to_save(self):
+        switch = {
+            self.empty: "a",
+            self.start: "b",
+            self.wall: "c",
+            self.enemy: "d",
+            self.trap: "e",
+            self.crack: "f",
+            self.treasure: "g",
+            self.magic_sword: "g",
+            self.golden_key: "i",
+            self.magic_portal: "j",
+            self.moving_platform: "k",
+        }
+
+        return switch[self]
+
+    def to_load(c: str):
+        switch = {
+            'a': Cell.empty,
+            'b': Cell.start,
+            'c': Cell.wall,
+            'd': Cell.enemy,
+            'e': Cell.trap,
+            'f': Cell.crack,
+            'g': Cell.treasure,
+            'h': Cell.magic_sword,
+            'i': Cell.golden_key,
+            'j': Cell.magic_portal,
+            'k': Cell.moving_platform,
+        }
+
+        return switch[c]
+
 
 # ─────────────────────── Map representing the dungeon ─────────────────────── #
 class DungeonMap(object):
     """ Dungeon Map represented by a grid of n * m cells """
 
     # ------------ different types of cells found in the dungeon ------------- #
-    def __init__(self, n : int, m : int):
+    def __init__(self, n: int, m: int):
         """
         The dungeon is a grid of size n * m, initialized
         with only a starting position (bottom right corner) and
@@ -57,7 +92,7 @@ class DungeonMap(object):
         self.reset()
 
     # ────────────────────── is that dungeon winnable ? ────────────────────── #
-    def __is_winnable(self, portals: bool= False):
+    def __is_winnable(self, portals: bool = False):
         """
         Tests if the dungeon is winnable,
         i.e: there exists a path from the start to the golden key, from the
@@ -66,22 +101,22 @@ class DungeonMap(object):
         @param portals: [bool] authorizes the use of random portals in the path
         @return cool: True if the path exists under the given conditions
         """
-        astar = AStar(unreachable = (Cell.wall, Cell.crack)) if portals else \
-                AStar(unreachable = (Cell.wall, Cell.crack, Cell.magic_portal))
+        astar = AStar(unreachable=(Cell.wall, Cell.crack)) if portals else \
+            AStar(unreachable=(Cell.wall, Cell.crack, Cell.magic_portal))
         astar.load_map(self)
         key, treasure, start = None, (0, 0), (self.n - 1, self.m - 1)
         for h in range(self.m * self.n):
             if self[h] == Cell.golden_key:
                 key = (h // self.m, h % self.m)
-        path_to_key      = astar.process_shortest_path(start, key)
+        path_to_key = astar.process_shortest_path(start, key)
         path_to_treasure = astar.process_shortest_path(key, treasure)
-        path_back        = astar.process_shortest_path(treasure, start)
+        path_back = astar.process_shortest_path(treasure, start)
 
         # for path_str in ('path_to_key', 'path_to_treasure', 'path_back'):
-            # path = locals()[path_str]
-            # if path:
-                # print((' * ' + path_str + ' * ').center(4 * self.m + 1, '-'))
-                # astar.display_path(path)
+        # path = locals()[path_str]
+        # if path:
+        # print((' * ' + path_str + ' * ').center(4 * self.m + 1, '-'))
+        # astar.display_path(path)
         return bool(path_to_key) and bool(path_to_treasure) and bool(path_back)
 
     def valid(self, g=None):
@@ -94,12 +129,12 @@ class DungeonMap(object):
         """
         g = self.__grid if g is None else g
         return g.count(Cell.start) == 1 and \
-                g.count(Cell.treasure) == 1 and \
-                g.count(Cell.golden_key) >= 1 and \
-                g.count(Cell.magic_sword) >= 1
+               g.count(Cell.treasure) == 1 and \
+               g.count(Cell.golden_key) >= 1 and \
+               g.count(Cell.magic_sword) >= 1
 
     # ──────────── find all non-wall cells at a certain distance ───────────── #
-    def all_cell_dist(self, start: (int, int)= (0, 0), dist: int= -1):
+    def all_cell_dist(self, start: (int, int) = (0, 0), dist: int = -1):
         """
         Finds all valid cells within a 'dist' manhattan distance of the start
         if 'dist' = -1, finds all valid cells in the whole map
@@ -113,7 +148,7 @@ class DungeonMap(object):
         return candidates
 
     # ────────────────────── find random non-wall cells ────────────────────── #
-    def random_cell_dist(self, start: (int, int)= (0, 0), dist: int= -1):
+    def random_cell_dist(self, start: (int, int) = (0, 0), dist: int = -1):
         """
         Finds a random valid cell within a 'dist' manhattan distance of the start
         if 'dist' = -1, finds a random valid cell in the whole map
@@ -173,8 +208,8 @@ class DungeonMap(object):
             (Cell.trap, 0.05),
             (Cell.enemy, 0.1)
         ]
-        cells = [cell for (cell,_) in cell_p]
-        distrib = [p for (_,p) in cell_p]
+        cells = [cell for (cell, _) in cell_p]
+        distrib = [p for (_, p) in cell_p]
         for h in range(n * m):
             cell = npchoice(cells, p=distrib)
             if grid[h] == '': grid[h] = cell
@@ -191,11 +226,27 @@ class DungeonMap(object):
         """ Loads a snapshot (list of cells) of a dungeon of same size """
         assert len(snapshot) == self.n * self.m
         self.__grid = snapshot
-        self.winnable = self.__is_winnable(portals= False)
+        self.winnable = self.__is_winnable(portals=False)
 
     def reset(self):
         """ Resets the dungeon to its initial layout (stored in init_map) """
         self.load(self.init_map)
+
+    def load_map(self, save_path: str):
+
+        try:
+            with open(save_path, 'r') as file:
+                lines = file.readline()
+                self.n, self.m = int(lines.split(',')[0]), int(lines.split(',')[1])
+                lines = file.readline()
+                self.__grid = [Cell.to_load(c) for c in lines]
+        except FileNotFoundError:
+            print("File to load don't exist !")
+        self.reset()
+
+    def save_map(self, save_path: str):
+        with open(save_path, 'w') as file:
+            file.write(str(self.n) + ',' + str(self.m) + '\n' + ''.join([c.to_save() for c in self.__grid]))
 
     # ──────────────────────────── magic methods ───────────────────────────── #
     def __getitem__(self, indexes):
@@ -233,9 +284,9 @@ class DungeonMap(object):
         sep = "├───" + "┼───" * (self.m - 1) + "┤"
         bot = "└───" + "┴───" * (self.m - 1) + "┘"
         m = self.m
-        dungeon_lines = [self[row * m : (row + 1) * m] for row in range(self.n)]
+        dungeon_lines = [self[row * m: (row + 1) * m] for row in range(self.n)]
         formated_lines = ['│ ' + ' │ '.join([cell.value for cell in line]) + ' │'
-                for line in dungeon_lines]
+                          for line in dungeon_lines]
         return top + "\n" + ("\n" + sep + "\n").join(formated_lines) + "\n" + bot + "\n"
 
     def __repr__(self):
@@ -245,9 +296,9 @@ class DungeonMap(object):
 class AStar(object):
     """ Special AStar algorithm adapted to this specific labyrinth """
 
-    dist = DungeonMap.distance # we reuse the Manhattan distance
+    dist = DungeonMap.distance  # we reuse the Manhattan distance
 
-    def __init__(self, unreachable: list= (Cell.wall, Cell.crack)):
+    def __init__(self, unreachable: list = (Cell.wall, Cell.crack)):
         """
         Creates an instance of the AStar algorithm
             - unreachable: list of cells forbidden (not accessible)
@@ -265,7 +316,7 @@ class AStar(object):
         """
         self.map = d_map
         n, m = d_map.n, d_map.m
-        self.grid = [{ 'parent': None, 'f': 0, 'g': 0, 'h': 0 } for h in range(n * m)]
+        self.grid = [{'parent': None, 'f': 0, 'g': 0, 'h': 0} for h in range(n * m)]
 
     def unload_map(self):
         """
@@ -314,7 +365,7 @@ class AStar(object):
             path += [self[path[-1]]['parent']]
         return path + [self.start]
 
-    def display_path(self, path: list= None):
+    def display_path(self, path: list = None):
         """ Shows the path found by the algorithm """
         path = self.get_path() if path is None else path
         print('path : ' + ' → '.join([str(x) for x in path[::-1]]))

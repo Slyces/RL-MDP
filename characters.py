@@ -210,8 +210,11 @@ class AdventurerLearning(Adventurer):
         self.Q = Qlearning.update(self.Q, old_state, new_state, action, reward)
         pass
 
-    def load_Qtable(self, tab):
+    def load_Qtable(self, tab: float):
         self.Q = tab
+
+    #def load_Qtable(self, path: str):
+
 
 
 class Qlearning(object):
