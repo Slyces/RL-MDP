@@ -3,7 +3,7 @@
 # ───────────────────────────────── imports ────────────────────────────────── #
 from characters import State, Adventurer
 from kernel import Dungeon
-from interface import TextInterface
+from interface import TextInterface, LearningInterface
 from dungeon_map import Direction
 import numpy as np
 # ──────────────────────────────────────────────────────────────────────────── #
@@ -60,11 +60,12 @@ class MDP(Adventurer):
 
 if __name__ == '__main__':
     np.set_printoptions(precision=2, linewidth=200)
-    d = Dungeon(2, 2)
+    n, m = 2, 4
+    d = Dungeon(n, m)
     # N = State.max_id + 1
     T = d.make_transition_matrix()
     R = d.make_reward_matrix(T)
-    agent, = d.agents = [MDP(1, 1, 2, 2, T=T, R=R)]
+    agent, = d.agents = [MDP(n - 1, m - 1, n, m, T=T, R=R)]
 
     # V, P = agent.value_iteration()
     # print(V.reshape(N, 1))
@@ -73,5 +74,5 @@ if __name__ == '__main__':
 
     agent.setup()
 
-    I = TextInterface(d)
+    I = LearningInterface(d)
     I.play_game()

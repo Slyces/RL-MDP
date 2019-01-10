@@ -66,8 +66,8 @@ class Dungeon(object):
                     for a in Direction:
                         # we only reward 'certain' actions, actions with
                         # probability 1 to lead to a state
-                        certain_state = T[s.id, a.to_int].tolist().index(1)
-                        if certain_state > -1: # -1 means no match
+                        if np.amax(T[s.id, a.to_int]) == 1:
+                            certain_state = np.argmax(T[s.id, a.to_int])
                             st = State(s_id=certain_state) # target state
                             # -------------- (*,0,*) → (*,1,*) --------------- #
                             if s.treasure == 0 and st.treasure == 1:
