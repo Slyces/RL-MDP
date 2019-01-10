@@ -22,6 +22,7 @@ class Dungeon(object):
         while not self.winnable:
             self.map = DungeonMap(n, m)
         self.agents = [AdventurerLearning(n - 1, m - 1, n, m) for i in range(nb_players)]
+        self.last_actions = [None for i in range(nb_players)]
         self.over = False
         self.caption = ''
 
@@ -305,6 +306,7 @@ class Dungeon(object):
 
         @return an int, the reward associated with this action in that state
         """
+        self.last_actions[self.agents.index(agent)] = direction
         agent.pos = self.map.move(agent.pos, direction)
         return self.enter(agent, self.map[agent.pos])
 
@@ -418,7 +420,16 @@ class Dungeon(object):
         if all(map(lambda a: not a.alive, self.agents)):
             self.defeat() # every player is dead
 
-    # ──────────────────────────── magic methods ───────────────────────────── #
+    # ─────────────────────────── priting methods ──────────────────────────── #
+    def show_last_actions(self):
+        strings = []
+        if any([a is None for a in self.last_actions]):
+            return 'no move yet'
+        for (h, agent) in enumerate(self.agents):
+            strings += ['player {} played {}'.format(
+                    h, '↑→↓←'[self.last_actions[h].to_int])]
+        return '\n'.join(strings)
+
     def colored_str(self):
         from utils import Color, color_grid
         n, m = self.n, self.m
@@ -454,6 +465,7 @@ class Dungeon(object):
         legend = '\n'.join(legends)
         return colored_map + legend + '\n'
 
+    # ──────────────────────────── magic methods ───────────────────────────── #
     def __str__(self):
         """ adds the position of agents to the string representation """
         agents_symbols = '*^'
@@ -469,7 +481,7 @@ class Dungeon(object):
             legends.append('{}: agent {}\'s position'.format(agents_symbols[h], h))
 
         legend = '\n'.join(legends)
-        return ''.join(map_repr) + legend + '\n'
+        return ''.join(map_repr) + legend # + '\n'
 
     def __repr__(self):
         return "Dungeon({} x {}, {} players)".format(self.n, self.m, len(self.agents))
@@ -507,7 +519,7 @@ class Dungeon(object):
                     utils.Color.red: path_to_treasure,
                     utils.Color.green: path_back
                     })
-        return map_repr + legend + '\n'
+        return map_repr + legend # + '\n'
 
 # ──────────────────────────────── executable ──────────────────────────────── #
 if __name__ == '__main__':

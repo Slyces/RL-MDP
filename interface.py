@@ -44,6 +44,8 @@ class TextInterface(object):
         os.system('clear')
         # print(self.dungeon)
         print(self.dungeon.colored_str())
+        print('-' * (1 + self.dungeon.m * 4))
+        print(self.dungeon.show_last_actions())
         print(self.infos)
         print(self.dungeon.caption)
         self.dungeon.caption = ''
