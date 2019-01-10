@@ -338,6 +338,7 @@ class Dungeon(object):
             else:
                 self.caption += "Picked up an item ({}) !!".format(cell.name)
                 agent.acquire_item(cell)
+                return 0.5
         # ------------------ treasure is particular, though ------------------ #
         elif cell == Cell.treasure and agent.has_item(Cell.golden_key):
             self.caption += "Got the treasure !"
@@ -396,6 +397,10 @@ class Dungeon(object):
         self.over = False
         for agent in self.agents:
             agent.reset()
+
+    def load_map(self, path: str):
+        self.map.load_map(path)
+        self.m, self.n = self.map.m, self.map.n
 
     # ────────────────────────── victory and defeat ────────────────────────── #
     def victory(self, agent: Adventurer):
