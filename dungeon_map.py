@@ -1,3 +1,4 @@
+# encoding: utf-8
 # ───────────────────────────────── imports ────────────────────────────────── #
 from enum import Enum
 from random import choice as rchoice, randint
@@ -10,17 +11,18 @@ class Direction(Enum):
     SOUTH = (1, 0)
     WEST = (0, -1)
 
-    @staticmethod
-    def reverse(direction):
+    def reverse(self):
         return {Direction.NORTH: Direction.SOUTH,
                 Direction.SOUTH: Direction.NORTH,
                 Direction.WEST: Direction.EAST,
-                Direction.EAST: Direction.WEST}[direction]
+                Direction.EAST: Direction.WEST}[self]
+
+    def to_int(self):
+        return list(Direction).index(self)
 
     @staticmethod
-    def to_int(direction):
-        return [Direction.NORTH, Direction.EAST, Direction.SOUTH,
-                Direction.WEST].index(direction)
+    def from_int(value: int):
+        return list(Direction)[value]
 
 # ─────────────────────────────── Cells Types ──────────────────────────────── #
 class Cell(Enum):
@@ -51,7 +53,6 @@ class Cell(Enum):
             self.magic_portal: "j",
             self.moving_platform: "k",
         }
-
         return switch[self]
 
     def to_load(c: str):
