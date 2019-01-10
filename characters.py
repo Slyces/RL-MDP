@@ -4,8 +4,6 @@ from utils import vprint
 from states import State
 import numpy as np, random
 # ──────────────────────────────────────────────────────────────────────────── #
-
-
 # ──────────────────────────────── adventurer ──────────────────────────────── #
 class Adventurer(object):
     """ Adventurer for the MDP game. """
@@ -120,7 +118,7 @@ class Qlearning(object):
         row = q_table[state.id]
         softmax_distribution = Qlearning.softmax(row)
         result = Qlearning.random_index(softmax_distribution)
-        return Qlearning.int_to_direction(result)
+        return Direction.from_int(result)
 
     def softmax(array):
         values = np.zeros(len(array))
@@ -143,7 +141,7 @@ class Qlearning(object):
     def update(q_table: float, old_state: State, new_state: State, action: Direction, reward: float):
         currentRow = np.sort(q_table[new_state.id].copy())
 
-        action_index = Qlearning.direction_to_int(action)
+        action_index = action.to_int()
         delta = reward + Qlearning.gamma * currentRow[len(currentRow) - 1] - q_table[old_state.id][action_index]
 
         old = q_table[old_state.id][action_index]
@@ -153,24 +151,3 @@ class Qlearning(object):
 
         return q_table
 
-    # ------------------------- Usefull def --------------------------#
-
-    def direction_to_int(direction: Direction):
-        if direction == Direction.NORTH:
-            return 0
-        elif direction == Direction.EAST:
-            return 1
-        elif direction == Direction.SOUTH:
-            return 2
-        else:
-            return 3
-
-    def int_to_direction(number: int):
-        if number == 0:
-            return Direction.NORTH
-        elif number == 1:
-            return Direction.EAST
-        elif number == 2:
-            return Direction.SOUTH
-        else:
-            return Direction.WEST
