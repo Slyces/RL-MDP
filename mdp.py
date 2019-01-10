@@ -4,7 +4,7 @@
 from characters import State, Adventurer
 from kernel import Dungeon
 from interface import TextInterface, LearningInterface
-from dungeon_map import Direction
+from dungeon_map import Direction, Cell
 import numpy as np
 # ──────────────────────────────────────────────────────────────────────────── #
 
@@ -63,6 +63,41 @@ if __name__ == '__main__':
     n, m = 2, 4
     d = Dungeon(n, m)
     # N = State.max_id + 1
+    T = d.make_transition_matrix()
+    R = d.make_reward_matrix(T)
+    agent, = d.agents = [MDP(n - 1, m - 1, n, m, T=T, R=R)]
+
+    # V, P = agent.value_iteration()
+    # print(V.reshape(N, 1))
+    # print(P.reshape(N, 1))
+    # print(np.concatenate((P.reshape(N, 1), V.reshape(N, 1)), axis=1))
+
+    agent.setup()
+
+    I = LearningInterface(d)
+    I.play_game()
+
+
+    n, m = 7, 17
+    d = Dungeon(n, m)
+
+    i = Cell.start
+    v = Cell.empty
+    s = Cell.magic_sword
+    p = Cell.magic_portal
+    e = Cell.enemy
+    w = Cell.wall
+    t = Cell.treasure
+    k = Cell.golden_key
+
+    d.map.load([t, k, e, e, e, e, e, e, e, e, e, e, e, e, e, e, e,
+                w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, e,
+                p, s, v, v, v, v, v, v, v, v, v, v, v, v, v, w, e,
+                w, w, w, w, w, w, w, w, w, w, w, w, w, w, v, w, e,
+                v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, w, e,
+                v, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, e,
+                v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, i])
+
     T = d.make_transition_matrix()
     R = d.make_reward_matrix(T)
     agent, = d.agents = [MDP(n - 1, m - 1, n, m, T=T, R=R)]
