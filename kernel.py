@@ -41,6 +41,48 @@ class Dungeon(object):
             if p > 0:
                 print('- {p:4.2%}: {st}'.format(p=p, st=State(s_id=i)))
 
+    # ──────────────────── constructing the reward matrix ──────────────────── #
+    def make_reward_matrix(self, T: np.array):
+        """
+        The reward matrix is quite simple:
+            - death → (*,*,*) : -1
+            - (*,0,*) → key : 1
+            - (*,1,*) → treasure : 1
+            - (*,2,start) → (*,2,start) : 1
+            - else, 0
+        Negative reward for death
+        Positive reward for (actually) picking up the key, picking up the treasure
+        and returning to start with the treasure
+        """
+        n, m = self.n, self.m
+        n_state = State.max_id + 1
+        death = n_state - 1
+        R = np.zeros((n_state, 4), np.float32)
+        for sw in range(2):
+            for tr in range(3):
+                for p in range(n * m):
+                    s = State(sw, tr, p)
+                    for a in Direction:
+                        # we only reward 'certain' actions, actions with
+                        # probability 1 to lead to a state
+                        certain_state = T[s.id, a.to_int].tolist().index(1)
+                        if certain_state > -1: # -1 means no match
+                            st = State(s_id=certain_state) # target state
+                            # -------------- (*,0,*) → (*,1,*) --------------- #
+                            if s.treasure == 0 and st.treasure == 1:
+                                R[s.id, a.to_int] = 1
+                            # -------------- (*,1,*) → (*,2,*) --------------- #
+                            if s.treasure == 1 and st.treasure == 2:
+                                R[s.id, a.to_int] = 1
+                            # ---------- (*,2,start) → (*,2,start) ----------- #
+                            if s.treasure == st.treasure == 2 and \
+                                    s.position == st.position == n * m - 1:
+                                R[s.id, a.to_int] = 1
+                            # ---------------- death → death ----------------- #
+                            if s.id == st.id == death:
+                                R[s.id, a.to_int] = -1
+        return R
+
     # ────────────────── constructing the transition matrix ────────────────── #
     def make_transition_matrix(self):
         """
