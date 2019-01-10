@@ -1,4 +1,6 @@
 # ───────────────────────────────── imports ────────────────────────────────── #
+import csv
+
 from dungeon_map import Direction, Cell
 from utils import vprint
 from states import State
@@ -110,6 +112,25 @@ class AdventurerLearning(Adventurer):
 
     def load_Qtable(self, tab: float):
         self.Q = tab
+
+    def load_Qtable_from_file(self, path: str):
+        try:
+            with open(path, "r") as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter=',')
+                for row in csv_reader:
+                    row = [float(i) for i in row]
+                    self.Q = np.vstack([self.Q, row])
+            print(self.Q)
+            print(State.max_id, np.size(self.Q, 0))
+            assert State.max_id == len(self.Q)*4, "Q_table size don't fit with map"
+        except FileNotFoundError:
+            print("File to load don't exist !")
+
+
+    def save_Qtable(self, path):
+        with open(path, 'w',  newline='') as csvFile:
+            writer = csv.writer(csvFile)
+            writer.writerows(self.Q)
 
 # ───────────────────────────── q-learning class ───────────────────────────── #
 class Qlearning(object):

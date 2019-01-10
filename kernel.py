@@ -396,14 +396,21 @@ class Dungeon(object):
     # ────────────────────────────────── Reset ─────────────────────────────── #
     def reset(self):
         self.map.reset()
+        State.configure(self.n, self.m)
         self.caption = ''
         self.over = False
         for agent in self.agents:
+            agent.n = self.n
+            agent.m = self.m
             agent.reset()
 
     def load_map(self, path: str):
         self.map.load_map(path)
         self.m, self.n = self.map.m, self.map.n
+        self.reset()
+
+    def save_map(self, path: str):
+        self.map.save_map(path)
 
     # ────────────────────────── victory and defeat ────────────────────────── #
     def victory(self, agent: Adventurer):

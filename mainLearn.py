@@ -1,17 +1,17 @@
-#!/usr/bin/env python3
 # encoding: utf-8
 import time
 
 import kernel
 import csv
-from interface import TextInterface, LearningInterface
+from interface import LearningInterface
 
 if __name__ == '__main__':
-    game = kernel.Dungeon(5,4)
+    game = kernel.Dungeon(3, 2)
     inter = LearningInterface(game)
     player, = game.agents
 
-    game.load_map("map.txt")
+    #game.load_map("map.txt")
+    player.load_Qtable_from_file("Qtable.csv")
 
     for i in range(6000):
         q_table = player.Q
@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
     # -------------------------- regarde le chemin --------------------------- #
     q_table = player.Q
-    # game.reset()
+    game.reset()
     player.load_Qtable(q_table)
     # inter.display()
     # time.sleep(0.5)
