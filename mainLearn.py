@@ -10,9 +10,9 @@ if __name__ == '__main__':
     inter = TextInterface(game)
     player, = game.agents
 
-    game.map.load_map("map.txt")
+    #game.load_map("map.txt")
 
-    for i in range(1000):
+    for i in range(20):
         q_table = player.Q
         game.reset()
         player.load_Qtable(q_table)

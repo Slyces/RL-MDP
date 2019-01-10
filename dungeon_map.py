@@ -243,6 +243,7 @@ class DungeonMap(object):
                 self.__grid = [Cell.to_load(c) for c in lines]
         except FileNotFoundError:
             print("File to load don't exist !")
+        self.init_map = self.__grid
         self.reset()
 
     def save_map(self, save_path: str):

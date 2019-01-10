@@ -398,6 +398,10 @@ class Dungeon(object):
         for agent in self.agents:
             agent.reset()
 
+    def load_map(self, path: str):
+        self.map.load_map(path)
+        self.m, self.n = self.map.m, self.map.n
+
     # ────────────────────────── victory and defeat ────────────────────────── #
     def victory(self, agent: Adventurer):
         """ Method to restart the simulation and handle a victory """
