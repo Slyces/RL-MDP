@@ -4,12 +4,14 @@
 import pytest, numpy as np
 from kernel import Dungeon
 from characters import State
-from dungeon_map import Direction, Cell, pretty_cells
+from dungeon_map import Direction, Cell
 from random import randint as rdi
 # ──────────────────────────────────────────────────────────────────────────── #
 np.set_printoptions(precision=5, linewidth=200)
 
 n = 20
+
+pretty_cells = Cell.pretty_cells
 
 b = Cell.start
 p = Cell.magic_portal

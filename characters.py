@@ -141,7 +141,7 @@ class Qlearning(object):
     def update(q_table: float, old_state: State, new_state: State, action: Direction, reward: float):
         currentRow = np.sort(q_table[new_state.id].copy())
 
-        action_index = action.to_int()
+        action_index = action.to_int
         delta = reward + Qlearning.gamma * currentRow[len(currentRow) - 1] - q_table[old_state.id][action_index]
 
         old = q_table[old_state.id][action_index]

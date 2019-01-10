@@ -41,7 +41,7 @@ class TextInterface(object):
 
     # ─────────────────── display the state of the dungeon ─────────────────── #
     def display(self):
-        #os.system('clear')
+        os.system('clear')
         # print(self.dungeon)
         print(self.dungeon.colored_str())
         print(self.infos)
@@ -76,3 +76,12 @@ class TextInterface(object):
             self.dungeon.move(self.player, Direction.NORTH)
         if ch in ('\x03'):
             sys.exit(1)
+
+class LearningInterface(TextInterface):
+    def display(self):
+        # os.system('clear')
+        # print(self.dungeon) # no color
+        print(self.dungeon.colored_str()) # color
+        print(self.infos)
+        print(self.dungeon.caption)
+        self.dungeon.caption = ''

@@ -435,6 +435,7 @@ class Dungeon(object):
                 Color.red: [(0, 0), key],
                 Color.green: [self.agents[0].pos]
             }
+        print(color)
         grid = ['' for i in range(n * m)]
         for p in range(n * m):
             grid[p] = self.map[p].value

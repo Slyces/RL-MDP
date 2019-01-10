@@ -25,7 +25,7 @@ class Direction(Enum):
 
 # ─────────────────────────────── Cells Types ──────────────────────────────── #
 class Cell(Enum):
-    pretty_cells = False
+    pretty_cells = True
     empty = '  '[pretty_cells]
     start = '◉◉'[pretty_cells]
     wall = '■■'[pretty_cells]
@@ -47,7 +47,7 @@ class Cell(Enum):
             self.trap: "e",
             self.crack: "f",
             self.treasure: "g",
-            self.magic_sword: "g",
+            self.magic_sword: "h",
             self.golden_key: "i",
             self.magic_portal: "j",
             self.moving_platform: "k",
@@ -232,13 +232,14 @@ class DungeonMap(object):
         self.load(self.init_map)
 
     def load_map(self, save_path: str):
-
         try:
             with open(save_path, 'r') as file:
-                lines = file.readline()
-                self.n, self.m = int(lines.split(',')[0]), int(lines.split(',')[1])
-                lines = file.readline()
-                self.__grid = [Cell.to_load(c) for c in lines]
+                line = file.readline()
+                self.n, self.m = [int(x) for x in line.split(',')]
+                line = file.readline()
+                print(line)
+                self.__grid = [Cell.to_load(c) for c in line]
+                print(self.__grid)
         except FileNotFoundError:
             print("File to load don't exist !")
         self.init_map = self.__grid
