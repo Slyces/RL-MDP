@@ -73,7 +73,8 @@ class Adventurer(object):
         """
         return Direction.NORTH
 
-    def process_reward(self, oldState: State, newState: State, action: Direction, reward: float):
+    def process_reward(self, oldState: State, newState: State, action: Direction,
+            reward: float):
         """ The agent processes the reward obtained while performing an action """
         pass
 
@@ -84,10 +85,12 @@ class Adventurer(object):
     # ───────────────────────────── string infos ───────────────────────────── #
     @property
     def infos(self):
-        return '{} items {} [{}]'.format(self.name,
-                                         set([item.value for item in self.__items]), 'ALIVE' if self.alive else 'DEAD')
+        return '{} items {} [{}]'.format(
+                self.name,
+                '{ ' + ' , '.join([item.value for item in self.__items]) + ' }',
+                'ALIVE' if self.alive else 'DEAD')
 
-
+# ───────────────────────────── q-learning agent ───────────────────────────── #
 class AdventurerLearning(Adventurer):
 
     def __init__(self, i: int, j: int, n: int, m: int, name='Remi'):
@@ -105,10 +108,7 @@ class AdventurerLearning(Adventurer):
     def load_Qtable(self, tab: float):
         self.Q = tab
 
-    #def load_Qtable(self, path: str):
-
-
-
+# ───────────────────────────── q-learning class ───────────────────────────── #
 class Qlearning(object):
     beta = 8
     learning_rate = 0.4

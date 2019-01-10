@@ -11,12 +11,11 @@ class Direction(Enum):
     SOUTH = (1, 0)
     WEST = (0, -1)
 
+    @property
     def reverse(self):
-        return {Direction.NORTH: Direction.SOUTH,
-                Direction.SOUTH: Direction.NORTH,
-                Direction.WEST: Direction.EAST,
-                Direction.EAST: Direction.WEST}[self]
+        return list(Direction)[(self.to_int + 2) % 4]
 
+    @property
     def to_int(self):
         return list(Direction).index(self)
 
@@ -69,7 +68,6 @@ class Cell(Enum):
             'j': Cell.magic_portal,
             'k': Cell.moving_platform,
         }
-
         return switch[c]
 
 

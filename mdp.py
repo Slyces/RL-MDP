@@ -10,7 +10,21 @@ class MDP(Adventurer):
         super().__init__(i, j, n, m, name)
         assert T is not None and R is not None
         self.T, self.R = T, R
+        self.P = np.zeros(n_states) - 1
+        self.gamma = 0.9
+        self.epsilon = 10e-5
 
+    # ────────────────── test of the validity of that agent ────────────────── #
+    @property
+    def ready(self):
+        return np.amin(self.P) >= 0
+
+    # ──────────────────── play (decide the next action) ───────────────────── #
+    def play(self, state: State):
+        assert self.ready
+        return Direction.from_int(self.P[state.id])
+
+    # ────────────────────── value iteration algorithm ─────────────────────── #
     def value_iteration(self):
         """
         @return V: array of N x 1, containing the estimated reward for each
@@ -18,13 +32,10 @@ class MDP(Adventurer):
         """
         # ────────────────────────── variables init ────────────────────────── #
         n_states = State.max_id + 1
-        epsilon = 10e-5
-        gamma = 0.9
-        delta = 1
 
         # ────────────────────────── matrices init ─────────────────────────── #
-        Q = np.zeros((n_states, 4), np.float32)
-        lV = np.ones(n_states, np.float32)
+        # Q = np.zeros((n_states, 4), np.float32)
+        # lV = np.ones(n_states, np.float32)
         V = np.zeros(n_states, np.float32)
 
         # ──────────────────────────── main loop ───────────────────────────── #

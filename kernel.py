@@ -113,7 +113,7 @@ class Dungeon(object):
                     for ((k, l), direction) in self.map.neighbors(i, j):
                         # if (k,l) is ↑ of (i, j), (i, j) is ↓ of (k, l)
                         s.position = k * m + l
-                        reverse_dir = Direction.reverse(direction)
+                        reverse_dir = direction.reverse
                         T[s.id, reverse_dir.to_int, :] = transitions
         for sid in range(n_states):
             for a in Direction:
