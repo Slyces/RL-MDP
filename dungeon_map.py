@@ -244,7 +244,7 @@ class DungeonMap(object):
         self.reset()
 
     def save_map(self, save_path: str):
-        with open(save_path, 'w') as file:
+        with open(save_path, 'w',  newline='') as file:
             file.write(str(self.n) + ',' + str(self.m) + '\n' + ''.join([c.to_save() for c in self.__grid]))
 
     # ──────────────────────────── magic methods ───────────────────────────── #
