@@ -122,7 +122,7 @@ class AdventurerLearning(Adventurer):
                     self.Q = np.vstack([self.Q, row])
             print(self.Q)
             print(State.max_id, np.size(self.Q, 0))
-            assert State.max_id == len(self.Q)*4, "Q_table size don't fit with map"
+            assert State.max_id == len(self.Q), "Q_table size don't fit with map"
         except FileNotFoundError:
             print("File to load don't exist !")
 

@@ -13,7 +13,7 @@ if __name__ == '__main__':
     #game.load_map("map.txt")
     player.load_Qtable_from_file("Qtable.csv")
 
-    for i in range(6000):
+    for i in range(600):
         q_table = player.Q
         game.reset()
         player.load_Qtable(q_table)
@@ -31,6 +31,7 @@ if __name__ == '__main__':
     q_table = player.Q
     game.reset()
     player.load_Qtable(q_table)
+    player.save_Qtable("Qtable.csv")
     # inter.display()
     # time.sleep(0.5)
     # while not game.over:
@@ -41,6 +42,3 @@ if __name__ == '__main__':
     inter.play_game()
     game.map.save_map("map.txt")
 
-    with open("Qtable.csv", 'w') as csvFile:
-        writer = csv.writer(csvFile)
-        writer.writerows(player.Q)
