@@ -2,6 +2,7 @@
 # encoding: utf-8
 # ───────────────────────────────── imports ────────────────────────────────── #
 from random import random
+from markov import MarkovChain
 from characters import Adventurer, AdventurerLearning,State
 from dungeon_map import DungeonMap, Direction, Cell, AStar
 import utils, numpy as np
@@ -24,13 +25,15 @@ class Dungeon(object):
         self.over = False
         self.caption = ''
 
+        self.teleport_distributions = {}
+
         State.configure(n, m)
 
     # ────────────────── constructing the transition matrix ────────────────── #
     def make_transitions(self):
         n_states = State.max_id + 1 # last state is death
         n, m = self.n, self.m
-        T = np.zeros((n_states, 4, n_states))
+        T = np.zeros((n_states, 4, n_states), np.float32)
         S = self.markov_chain()
         M = self.moving_markov_chain()
         for sw in range(2):
@@ -48,13 +51,97 @@ class Dungeon(object):
                         else:
                             T[s.id, a, :] = self.special_transition(S, M, s_prime)
 
-    def special_transition(self, S: MarkovChain, M: MarkovChain, s_prime: State):
-        pass
+
+    def special_transition(self, S: MarkovChain, M: MarkovChain, state: State):
+        """
+        @param S: Markovchain= a markov chain representing the stable states of
+                  the dungeon, i.e. the states that must only be iterated once
+                  ex: the 'over an ennemy cell' state. that state might lead to
+                  itself, and yet you won't fight the ennemy again.
+                  this markov chain must only be used to advance of 1 time step.
+
+                  it contains every actual states of the game, including the
+                  'death' state.
+
+        @param M: Markochain= a markov chain representing the 'moving states' of
+                  the dungeon, i.e. the states that can be recursive. those
+                  states, such as the moving platform and the portal, are just 
+                  temporary. they lead you to another stable state, or to
+                  another moving state that will lead you back elsewhere. they
+                  can be infinitely cycling between themselves.
+                  To deal with such states, we need to iterate a markov chain
+                  until we reach stable probabilities, i.e. probabilities over
+                  the states that are unchanged upon iteration of the markov
+                  chain.
+
+                  To simplify this, as the two cells considered here only impact
+                  the position on the grid, we use a reduced version of the
+                  states, only including n * m states (the grid positions).
+
+                  The result obtained at stability is the probability to be in
+                  each cell of the dungeon, after using a moving platform or
+                  teleporter. It accounts for every recursive teleportation
+                  that can occur.
+
+        @param state: State= the particular state to be computed. It must be
+                  a state where the position corresponds to a 'moving cell'.
+
+        This function deals with two difficult or 'special' states, the portal
+        and the moving platform. They teleport the player to another cell, that
+        is then triggered as if the player just walked into it. If that state is
+        a portal or moving platform, the result is recursive and might lead again
+        to a teleportation, effectively creating possible infinite loop.
+
+        To deal with such states, we use two markov chains. One considering stable
+        states, that must be iterated only once, and one for the recursive states
+        that is iterated until we find a correct probability distribution.
+
+        Ad this methods operates with heavy matrix operations that might be
+        needed multiple times, we store the results of already computed calculations
+        to reuse them and modify them according to the need.
+        """
+        # This method will be heavily commented
+        n, m = self.n, self.m
+
+        # ──────────── extracting the grid position of the state ───────────── #
+        p = state.position
+
+        # ────────────── checking that the state given is valid ────────────── #
+        assert self.map[p] in (Cell.magic_portal, Cell.moving_platform) 
+
+        # ────────────────── checking for existing results ─────────────────── #
+        distrib = np.zeros(n * m, np.float32)
+        if p in self.teleport_distributions:
+            distrib = self.teleport_distributions[p]
+        # ─────────────── compute the results if not available ─────────────── #
+        else:
+            # Create a probability vector where we are in p
+            mu = np.zeros(n * m, np.float32)
+            mu[p] = 1
+            distrib = M.convergence_iteration(mu)
+        assert distrib.shape == (n * m,) and abs(sum(distrib) - 1) < 10e-6
+
+        # ───────────────── convert grid positions to state ────────────────── #
+        # We now have the distribution over the grid position. However, we need
+        # a distribution over the real state of the game, accounting for items.
+        # As the special cells do not impact (yet) items, we just need to 
+        # put this vector at the right place in the (6 times) larger state vector
+        # of the dungeon.
+        padding = state.sword * 3 + state.treasure
+        block_size = n * m
+
+        transition = np.zeros(State.max_id + 1, np.float32)
+        transition[padding * block_size: (padding + 1) * block_size] = distrib
+
+        # ───── iterate once the new states over the rest of the dungeon ───── #
+        transition = S.iterate(transition, 1)
+        assert 1 - 10e-6 <= sum(transition) <= 1
+        return transition
 
     # ──────────────────── constructing the markov chain ───────────────────── #
     def markov_chain(self):
-        n_state = State.max_id + 1
-        M = np.zeros((n_state, n_state))
+        n_state = State.max_id + 1 # because max id is n - 1
+        M = np.zeros((n_state, n_state), np.float32)
         n, m = self.n, self.m
         death = n_state - 1
         M[death, death] = 1
@@ -87,8 +174,8 @@ class Dungeon(object):
                         M[index, state.id] = 1
                     # ─────────────────── key acquisition ──────────────────── #
                     if cell == Cell.golden_key:
-                        state.treasure = max(state.treasure, 1) # get the key if you didn't
-                        # have it, else keep the treasure
+                        state.treasure = max(state.treasure, 1)
+                        # get the key if you didn't have it, else keep the treasure
                         M[index, state.id] = 1
                     # ───────────────── treasure acquisition ───────────────── #
                     if cell == Cell.treasure:
@@ -102,10 +189,7 @@ class Dungeon(object):
                         M[index, death] = 0.1 # death
                     if cell == Cell.magic_portal or cell == Cell.moving_platform:
                         M[index, index] = 1
-
-        ones = np.ones((n_state, 1))
-        assert all(np.matmul(M, ones) == ones)
-        return M
+        return MarkovChain(M)
 
     def moving_markov_chain(self):
         """
@@ -115,7 +199,7 @@ class Dungeon(object):
         """
         n, m = self.n, self.m
         n_state = n * m
-        M = np.zeros((n_state, n_state))
+        M = np.zeros((n_state, n_state), np.float32)
         for p in range(n * m):
             i, j = p // m, p % m
             cell = self.map[i, j]
@@ -131,7 +215,8 @@ class Dungeon(object):
                     M[p, p_next] = 1 / len(valid_cells)
             else:
                 M[p, p] = 1
-        return M
+
+        return MarkovChain(M)
 
     # ────────────────────── is that dungeon winnable ? ────────────────────── #
     @property
@@ -325,5 +410,20 @@ if __name__ == '__main__':
 
     print(custom_game)
 
+    S = custom_game.markov_chain()
     M = custom_game.moving_markov_chain()
-    print(M)
+
+    sp = State(0, 0, 3)
+    print(sp)
+    tr = np.zeros(State.max_id + 1)
+    tr[sp.id] = 1
+    tr = S.iterate(tr)
+
+    s = State(0, 0, 1)
+
+    t = custom_game.special_transition(S, M, s)
+
+    for (i, p) in enumerate(t):
+        s = State(s_id= i)
+        if p > 0:
+            print(p, s)

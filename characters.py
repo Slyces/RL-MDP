@@ -16,7 +16,8 @@ class State(object):
 
     def configure(n: int, m: int):
         """ Configures the static parameters of the class """
-        State.n, State.m, State.max_id = n, m, n * m * State.swords * State.treasures
+        State.n, State.m = n, m
+        State.max_id = n * m * State.swords * State.treasures # account for death
 
     # ───────────────────────────── constructor ────────────────────────────── #
     def __init__(self, sword: int = None, treasure: int = None, position: int = None,
@@ -34,12 +35,47 @@ class State(object):
 
         assert (sword is not None and treasure is not None and position is not None) or \
                s_id is not None
+        self.__sword, self.__treasure, self.__position, self.__id = -1, -1, -1, -1
         if s_id is not None:
             self.id = s_id
-            self.word, self.treasures, self.position = State.id_to_state(s_id)
+            # self.sword, self.treasure, self.position = State.id_to_state(s_id)
         else:
-            self.sword, self.treasure, self.position = sword, treasure, position
+            # self.sword, self.treasure, self.position = sword, treasure, position
             self.id = State.state_to_id(sword, treasure, position)
+
+    # ─────────────────── use getters for the same reason ──────────────────── #
+    @property
+    def sword(self): return self.__sword
+
+    @property
+    def treasure(self): return self.__treasure
+
+    @property
+    def position(self): return self.__position
+
+    @property
+    def id(self): return self.__id
+
+    # ──────────────── use setters to garanty value coherency ──────────────── #
+    @sword.setter
+    def sword(self, value: int):
+        self.__sword = value
+        self.__id = State.state_to_id(self.sword, self.treasure, self.position)
+
+    @treasure.setter
+    def treasure(self, value: int):
+        self.__treasure = value
+        self.__id = State.state_to_id(self.sword, self.treasure, self.position)
+
+    @position.setter
+    def position(self, value: int):
+        self.__position = value
+        self.__id = State.state_to_id(self.sword, self.treasure, self.position)
+
+    @id.setter
+    def id(self, value: int):
+        self.__id = value
+        self.__sword, self.treasure, self.position = State.id_to_state(value)
 
     # ──────────────── static conversions : state <--> values ──────────────── #
     @staticmethod
