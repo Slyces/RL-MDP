@@ -78,7 +78,7 @@ def test_transition_portals():
     print('\n' + '=' * 80)
     custom_game = Dungeon(4, 4)
 
-    custom_game.map.load([t, p, p, s,
+    custom_game.map.load_as_main([t, p, p, s,
                           p, p, m, p,
                           m, p, m, m,
                           k, m, p, b])
@@ -103,7 +103,7 @@ def test_tansition_platforms():
     print('\n' + '=' * 80)
     custom_game = Dungeon(4, 3)
 
-    custom_game.map.load([t, e, s,
+    custom_game.map.load_as_main([t, e, s,
                           e, m, e,
                           e, m, e,
                           k, e, b])

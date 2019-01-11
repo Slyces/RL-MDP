@@ -87,7 +87,7 @@ class DungeonMap(object):
         self[0, 0] = Cell.treasure
         self[n - 1, m - 1] = Cell.start
 
-        self.init_map = self.generate_map()
+        self.load_as_main(self.generate_map())
         self.reset()
 
     # ────────────────────── is that dungeon winnable ? ────────────────────── #
@@ -227,6 +227,10 @@ class DungeonMap(object):
         self.__grid = snapshot
         self.winnable = self.__is_winnable(portals=False)
 
+    def load_as_main(self, d_map):
+        self.init_map = d_map
+        self.load(d_map)
+
     def reset(self):
         """ Resets the dungeon to its initial layout (stored in init_map) """
         self.load(self.init_map)
@@ -307,7 +311,7 @@ class AStar(object):
         self.map, self.grid = None, None
 
     # ─────────────── loads a map for the next shortest paths ──────────────── #
-    def load_map(self, d_map: DungeonMap):
+    def load_map(self, d_map):
         """
         Loads a dungeon map that will be used for every pathfinding
 

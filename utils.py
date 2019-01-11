@@ -1,5 +1,6 @@
 # ───────────────────────────────── imports ────────────────────────────────── #
 from enum import Enum
+import numpy as np
 # ──────────────────────────────────────────────────────────────────────────── #
 verbose = 0
 def vprint(*args, v=1, **kwargs):
@@ -17,6 +18,14 @@ class Color(Enum):
     green      = 36
     white      = 37
 
+def rand_argmax(b, *args, **kwargs):
+    """ random tie breaking for multiple max values """
+    amax = np.amax(b, *args, **kwargs).reshape(b.shape[0], 1)
+    return np.argmax(np.random.random(b.shape) * (b == amax), *args, **kwargs)
+
+def add_sword(string):
+    string = string.replace('S ', '理')
+    return string.replace(' S*', '*理')
 
 def add_color(string: str, fg: Color= Color.white):
     """

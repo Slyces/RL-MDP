@@ -290,7 +290,6 @@ class Dungeon(object):
                     M[p, p_next] = 1 / len(valid_cells)
             else:
                 M[p, p] = 1
-
         return MarkovChain(M)
 
     # ────────────────────── is that dungeon winnable ? ────────────────────── #

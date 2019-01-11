@@ -1,8 +1,5 @@
 # encoding: utf-8
-import time
-
-import kernel
-import csv
+import time, kernel, csv
 from interface import LearningInterface
 
 if __name__ == '__main__':

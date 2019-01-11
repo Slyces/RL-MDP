@@ -2,6 +2,7 @@
 # ───────────────────────────────── imports ────────────────────────────────── #
 from kernel import Dungeon, Direction
 from time import sleep
+from utils import add_sword
 import os, sys
 # ──────────────────────────────────────────────────────────────────────────── #
 
@@ -30,10 +31,10 @@ class TextInterface(object):
     def display(self):
         os.system('clear')
         # print(self.dungeon)
-        print(self.dungeon.colored_str())
+        print(add_sword(self.dungeon.colored_str()))
         print('-' * (1 + self.dungeon.m * 4))
         print(self.dungeon.show_last_actions())
-        print(self.infos)
+        print(add_sword(self.infos))
         print(self.dungeon.caption)
         self.dungeon.caption = ''
 
@@ -71,10 +72,10 @@ class LearningInterface(TextInterface):
     def display(self):
         # os.system('clear')
         # print(self.dungeon) # no color
-        print(self.dungeon.colored_str()) # color
+        print(add_sword(self.dungeon.colored_str())) # color
         print('-' * (1 + self.dungeon.m * 4))
         print(self.dungeon.show_last_actions())
-        print(self.infos)
+        print(add_sword(self.infos))
         print(self.dungeon.caption)
         self.dungeon.caption = ''
 

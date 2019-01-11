@@ -12,7 +12,9 @@ class MarkovChain(np.ndarray):
     def __init__(self, matrix: np.array):
         super().__init__()
         self.chain_size = self.shape[0]
-        assert all(np.sum(self, 1) == 1)
+        print(np.abs(np.sum(self, 1) - 1))
+        print(np.amax(self, 1))
+        assert all(np.abs(np.sum(self, 1) - 1) < 10e-6)
 
     def iterate(self, mu: np.array, n: int= 1):
         """
