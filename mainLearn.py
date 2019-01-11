@@ -8,13 +8,32 @@ import csv
 from interface import LearningInterface
 
 if __name__ == '__main__':
-    game = kernel.Dungeon(4, 4)
+    game = kernel.Dungeon(8, 8)
     inter = LearningInterface(game)
     player, = game.agents
 
-    game.load_map("map_mur.txt")
+    game.load_map("default_map.txt")
 
     inter.display()
+    q_table = player.Q
+    game.reset()
+    player.load_Qtable(q_table)
+    a = []
+    t = 0
+    while len(a) < 20 or t > 2000:
+        t += 1
+        k = 0
+        q_table = player.Q
+        game.reset()
+        player.load_Qtable(q_table)
+        while not game.over:
+            game.caption = ''
+            action = player.policy()
+            game.move(player, action)
+            k += 1
+        if player.alive:
+            a.append(k)
+    a = np.mean(a)
     q_table = player.Q
     game.reset()
     player.load_Qtable(q_table)
@@ -46,12 +65,14 @@ if __name__ == '__main__':
                 new_state = player.state
                 player.process_reward(old_state, new_state, action, reward)
             if i % 100 == 0:
-                print(i * (j + 1))
+                print(i + (j * 5000))
         q_table = player.Q
         game.reset()
         player.load_Qtable(q_table)
         a = []
-        while len(a) < 10:
+        t = 0
+        while len(a) < 20 or t > 2000:
+            t += 1
             k = 0
             q_table = player.Q
             game.reset()

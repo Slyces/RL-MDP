@@ -139,7 +139,7 @@ class AdventurerLearning(Adventurer):
 # ───────────────────────────── q-learning class ───────────────────────────── #
 class Qlearning(object):
     beta = 8
-    learning_rate = 0.4
+    learning_rate = 0.1
     gamma = 0.9
 
     def policy(q_table: float, state: State):
