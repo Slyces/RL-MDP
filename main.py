@@ -7,7 +7,7 @@ from kernel import Dungeon
 
 if __name__ == '__main__':
     interface = TextInterface(Dungeon(8, 8, 1))
-    interface.dungeon.load_map("default_map.txt")
+    #interface.dungeon.load_map("default_map.txt")
     # winnable = interface.dungeon.winnable
     # print('Winnable ??', winnable)
     # if winnable:

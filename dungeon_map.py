@@ -29,7 +29,8 @@ class Cell(Enum):
     empty = '  '[pretty_cells]
     start = '◉◉'[pretty_cells]
     wall = '■■'[pretty_cells]
-    enemy = 'Eﲅ'[pretty_cells]
+    enemy_normal = 'Eﲅ'[pretty_cells]
+    enemy_special = 'QQ'[pretty_cells]
     trap = 'R☠'[pretty_cells]
     crack = 'Cﲯ'[pretty_cells]
     treasure = 'Tﰤ'[pretty_cells]
@@ -43,7 +44,8 @@ class Cell(Enum):
             self.empty: "a",
             self.start: "v",
             self.wall: "w",
-            self.enemy: "e",
+            self.enemy_normal: "e",
+            self.enemy_special: 'q',
             self.trap: "r",
             self.crack: "c",
             self.treasure: "t",
@@ -59,7 +61,8 @@ class Cell(Enum):
             'a': Cell.empty,
             'v': Cell.start,
             'w': Cell.wall,
-            'e': Cell.enemy,
+            'e': Cell.enemy_normal,
+            'q': Cell.enemy_special,
             'r': Cell.trap,
             'c': Cell.crack,
             't': Cell.treasure,
@@ -205,7 +208,8 @@ class DungeonMap(object):
             (Cell.crack, 0.05),
             (Cell.moving_platform, 0.05),
             (Cell.trap, 0.05),
-            (Cell.enemy, 0.1)
+            (Cell.enemy_normal, 0.05),
+            (Cell.enemy_special, 0.05)
         ]
         cells = [cell for (cell, _) in cell_p]
         distrib = [p for (_, p) in cell_p]

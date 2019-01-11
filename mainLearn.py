@@ -33,12 +33,15 @@ if __name__ == '__main__':
             k += 1
         if player.alive:
             a.append(k)
+            print(k)
+    ratio = len(a) / t
+    print("ratio", ratio)
     a = np.mean(a)
     print(a)
 
 
     for j in range(5):
-        for i in range(5000):
+        for i in range(1000):
             q_table = player.Q
             game.reset()
             player.load_Qtable(q_table)
@@ -50,7 +53,7 @@ if __name__ == '__main__':
                 new_state = player.state
                 player.process_reward(old_state, new_state, action, reward)
             if i % 100 == 0:
-                print(i + (j * 5000))
+                print(i + (j * 1000))
         q_table = player.Q
         game.reset()
         player.load_Qtable(q_table)
@@ -69,6 +72,7 @@ if __name__ == '__main__':
                 k += 1
             if player.alive:
                 a.append(k)
+        ratio = len(a) / t
         a = np.mean(a)
 
         path = "data/Qtable_", str((i + 1) * (j + 1)), ".csv"
@@ -79,8 +83,10 @@ if __name__ == '__main__':
             writer = csv.writer(csvFile)
             writer.writerows(player.Q)
         with open(path2, "w") as file:
-            text = ''.join(("nombre iter pour ", str((i + 1) * (j + 1)), " : ", str(a)))
+            text = ''.join(("nombre iter pour ", str((i + 1) * (j + 1)), " : ", str(a),"\n"))
             file.write(text)
+            file.write(''.join(("ratio : ", str(ratio))))
+            print("ratio", ratio)
 
 
 

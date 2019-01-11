@@ -238,9 +238,9 @@ class Dungeon(object):
                     if cell == Cell.crack:
                         M[index, death] = 1
                     # ──────────────────── ennemy : fight ──────────────────── #
-                    if cell == Cell.enemy and state.sword:
+                    if cell == Cell.enemy_normal and state.sword:
                         M[index, index] = 1 # fight won
-                    if cell == Cell.enemy and not state.sword:
+                    if cell == Cell.enemy_normal and not state.sword:
                         M[index, index] = 1 - Dungeon.p_enemy
                         M[index, death] = Dungeon.p_enemy
                     # ─────────────── magic sword acquisition ──────────────── #
@@ -373,7 +373,7 @@ class Dungeon(object):
                 self.caption += "But it's ineffective."
             # 60% : nothing
         # ----------------------------- FIGHT !! ----------------------------- #
-        elif cell == Cell.enemy and not agent.has_item(Cell.magic_sword):
+        elif cell == Cell.enemy_normal and not agent.has_item(Cell.magic_sword):
             # no fight for the brave wielding a sword
             self.caption += "Enemy in sight ! "
             p = random() # random floating number in [0, 1[
@@ -382,8 +382,20 @@ class Dungeon(object):
             else:
                 self.caption += "Woops, I'm dead"
                 self.kill(agent)
-        elif cell == Cell.enemy:
+        elif cell == Cell.enemy_normal:
             self.caption += "BIM ! BAM ! MAGIC SWORD IN YOUR FACE !"
+        elif cell == Cell.enemy_special and not agent.has_item(Cell.magic_sword):
+            # don't fight
+            self.caption += "Not a threat for me."
+        elif cell == Cell.enemy_special:
+            self.caption += "Enemy in sight ! "
+            p = random()  # random floating number in [0, 1[
+            if p > Dungeon.p_enemy:  # the player is victorious (p_enemy)%
+                self.caption += "Easily defeated."
+            else:
+                self.caption += "Woops, I'm dead"
+                self.kill(agent)
+
         # ------------ returning to the start (with the treasure) ------------ #
         elif cell == Cell.start and agent.has_item(Cell.treasure):
             self.caption += "I WON. !!!"
