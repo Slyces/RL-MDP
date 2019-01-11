@@ -20,7 +20,7 @@ if __name__ == '__main__':
     player.load_Qtable(q_table)
     a = []
     t = 0
-    while len(a) < 20 or t > 2000:
+    while len(a) < 20 and t < 10000:
         t += 1
         k = 0
         q_table = player.Q
@@ -34,23 +34,8 @@ if __name__ == '__main__':
         if player.alive:
             a.append(k)
     a = np.mean(a)
-    q_table = player.Q
-    game.reset()
-    player.load_Qtable(q_table)
-    a = []
-    while len(a) < 10:
-        k = 0
-        q_table = player.Q
-        game.reset()
-        player.load_Qtable(q_table)
-        while not game.over:
-            game.caption = ''
-            action = player.policy()
-            reward = game.move(player, action)
-            k +=1
-        if player.alive:
-            a.append(k)
-    print(np.mean(a))
+    print(a)
+
 
     for j in range(5):
         for i in range(5000):
@@ -71,7 +56,7 @@ if __name__ == '__main__':
         player.load_Qtable(q_table)
         a = []
         t = 0
-        while len(a) < 20 or t > 2000:
+        while len(a) < 20 and t < 10000:
             t += 1
             k = 0
             q_table = player.Q
