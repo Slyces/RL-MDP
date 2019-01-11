@@ -25,7 +25,7 @@ class Direction(Enum):
 
 # ─────────────────────────────── Cells Types ──────────────────────────────── #
 class Cell(Enum):
-    pretty_cells = True
+    pretty_cells = False
     empty = '  '[pretty_cells]
     start = '◉◉'[pretty_cells]
     wall = '■■'[pretty_cells]
@@ -41,32 +41,32 @@ class Cell(Enum):
     def to_save(self):
         switch = {
             self.empty: "a",
-            self.start: "b",
-            self.wall: "c",
-            self.enemy: "d",
-            self.trap: "e",
-            self.crack: "f",
-            self.treasure: "g",
-            self.magic_sword: "h",
-            self.golden_key: "i",
-            self.magic_portal: "j",
-            self.moving_platform: "k",
+            self.start: "v",
+            self.wall: "w",
+            self.enemy: "e",
+            self.trap: "r",
+            self.crack: "c",
+            self.treasure: "t",
+            self.magic_sword: "s",
+            self.golden_key: "k",
+            self.magic_portal: "p",
+            self.moving_platform: "m",
         }
         return switch[self]
 
     def to_load(c: str):
         switch = {
             'a': Cell.empty,
-            'b': Cell.start,
-            'c': Cell.wall,
-            'd': Cell.enemy,
-            'e': Cell.trap,
-            'f': Cell.crack,
-            'g': Cell.treasure,
-            'h': Cell.magic_sword,
-            'i': Cell.golden_key,
-            'j': Cell.magic_portal,
-            'k': Cell.moving_platform,
+            'v': Cell.start,
+            'w': Cell.wall,
+            'e': Cell.enemy,
+            'r': Cell.trap,
+            'c': Cell.crack,
+            't': Cell.treasure,
+            's': Cell.magic_sword,
+            'k': Cell.golden_key,
+            'p': Cell.magic_portal,
+            'm': Cell.moving_platform,
         }
         return switch[c]
 

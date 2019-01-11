@@ -117,14 +117,18 @@ class AdventurerLearning(Adventurer):
         try:
             with open(path, "r") as csv_file:
                 csv_reader = csv.reader(csv_file, delimiter=',')
+                self.Q = np.zeros((1, 4))
                 for row in csv_reader:
                     row = [float(i) for i in row]
                     self.Q = np.vstack([self.Q, row])
-            print(self.Q)
-            print(State.max_id, np.size(self.Q, 0))
+            self.Q = np.delete(self.Q, (0), axis=0)
             assert State.max_id == len(self.Q), "Q_table size don't fit with map"
         except FileNotFoundError:
             print("File to load don't exist !")
+        # except AssertionError:
+        #     print("load a normal empty Qtable..")
+        #     self.Q = np.zeros((State.max_id, 4))
+        #     print("Done")
 
 
     def save_Qtable(self, path):

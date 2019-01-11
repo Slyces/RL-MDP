@@ -60,8 +60,9 @@ class MDP(Adventurer):
 
 if __name__ == '__main__':
     np.set_printoptions(precision=2, linewidth=200)
-    n, m = 2, 4
+    n, m = 8, 8
     d = Dungeon(n, m)
+    d.load_map("default_map.txt")
     # N = State.max_id + 1
     T = d.make_transition_matrix()
     R = d.make_reward_matrix(T)
