@@ -86,6 +86,7 @@ class DungeonMap(object):
         a treasure (bottom top corner).
         """
         self.n, self.m = n, m
+        self.default = True
         self.__grid = [Cell.empty for i in range(self.n * self.m)]
         self[0, 0] = Cell.treasure
         self[n - 1, m - 1] = Cell.start
@@ -208,9 +209,21 @@ class DungeonMap(object):
             (Cell.crack, 0.05),
             (Cell.moving_platform, 0.05),
             (Cell.trap, 0.05),
-            (Cell.enemy_normal, 0.05),
-            (Cell.enemy_special, 0.05)
+            (Cell.enemy_normal, 0.1),
         ]
+
+        if not self.default:
+            for index, item in enumerate(cell_p):
+                itemlist = list(item)
+                if itemlist[0] == Cell.enemy_normal:
+                    itemlist[1] = 0.05
+                item = tuple(itemlist)
+                cell_p[index] = item
+
+            cell_p.append((Cell.enemy_special, 0.05))
+
+
+
         cells = [cell for (cell, _) in cell_p]
         distrib = [p for (_, p) in cell_p]
         for h in range(n * m):

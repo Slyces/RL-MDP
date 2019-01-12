@@ -540,6 +540,7 @@ class Dungeon(object):
                     })
         return map_repr + legend # + '\n'
 
+
 # ──────────────────────────────── executable ──────────────────────────────── #
 if __name__ == '__main__':
     np.set_printoptions(precision=5, linewidth=200)
