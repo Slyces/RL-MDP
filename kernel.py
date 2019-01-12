@@ -71,10 +71,10 @@ class Dungeon(object):
                             st = State(s_id=certain_state) # target state
                             # -------------- (*,0,*) → (*,1,*) --------------- #
                             if s.treasure == 0 and st.treasure == 1:
-                                R[s.id, a.to_int] = 1
+                                R[s.id, a.to_int] = 0.5
                             # -------------- (*,1,*) → (*,2,*) --------------- #
                             if s.treasure == 1 and st.treasure == 2:
-                                R[s.id, a.to_int] = 1
+                                R[s.id, a.to_int] = 0.5
                             # ---------- (*,2,start) → (*,2,start) ----------- #
                             if s.treasure == st.treasure == 2 and \
                                     s.position == st.position == n * m - 1:
@@ -339,11 +339,13 @@ class Dungeon(object):
             else:
                 self.caption += "Picked up an item ({}) !!".format(cell.name)
                 agent.acquire_item(cell)
-                return 0.5
+                if cell == Cell.golden_key: return 0.5
+                else: return 0
         # ------------------ treasure is particular, though ------------------ #
         elif cell == Cell.treasure and agent.has_item(Cell.golden_key):
             self.caption += "Got the treasure !"
             agent.acquire_item(cell)
+            return 0.5
         # ------------ magic portal and moving platforms teleport ------------ #
         elif cell == Cell.magic_portal:
             valid_cell = self.map.random_cell_dist()
