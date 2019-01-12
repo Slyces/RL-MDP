@@ -34,9 +34,13 @@ if __name__ == '__main__':
     a = np.mean(a)
     print(a)
 
+    with open("data/initial.txt", "w") as file:
+        file.write(''.join(("ratio : ", str(ratio), "\n")))
+        file.write(''.join(("nombre iter : ", str(a))))
 
-    for j in range(5):
-        for i in range(1000):
+
+    for j in range(20):
+        for i in range(2000):
             q_table = player.Q
             game.reset()
             player.load_Qtable(q_table)

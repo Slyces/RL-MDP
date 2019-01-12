@@ -166,10 +166,8 @@ class Qlearning(object):
         action_index = action.to_int
         delta = reward + Qlearning.gamma * currentRow[len(currentRow) - 1] - q_table[old_state.id][action_index]
 
-        old = q_table[old_state.id][action_index]
         q_table[old_state.id][action_index] += Qlearning.learning_rate * delta
-        q_table[old_state.id][action_index] = round(q_table[old_state.id][action_index], 5)
-        new = q_table[old_state.id][action_index]
+        q_table[old_state.id][action_index] = round(q_table[old_state.id][action_index], 6)
 
         return q_table
 
