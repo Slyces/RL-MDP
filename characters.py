@@ -10,7 +10,7 @@ import numpy as np, random
 class Adventurer(object):
     """ Adventurer for the MDP game. """
 
-    def __init__(self, i: int, j: int, n: int, m: int, name='Remi'):
+    def __init__(self, dungeon, name='Remi'):
         """
         Initializes an adventurer at position (i, j)
             - where i in the row and j the column
@@ -18,15 +18,14 @@ class Adventurer(object):
         """
         self.name = name
         self.alive = True
-        self.init_pos = i, j
-        self.i, self.j = i, j
-        self.n, self.m = n, m
+        self.dungeon = dungeon
+        self.i, self.j = self.dungeon.n - 1, self.dungeon.m - 1
         self.__items = []
 
     def reset(self):
         self.__items = []
         self.alive = True
-        self.pos = self.init_pos
+        self.pos = (self.dungeon.n - 1, self.dungeon.m - 1)
 
     # ───────────────────────── getter for the state ───────────────────────── #
     @property
@@ -39,7 +38,7 @@ class Adventurer(object):
     # ────────────────────────── getter for cell id ────────────────────────── #
     @property
     def cell_id(self):
-        return self.i * self.m + self.j
+        return self.i * self.dungeon.m + self.j
 
     # ─────────────────────── death of the adventurer ──────────────────────── #
     def kill(self):
@@ -95,8 +94,8 @@ class Adventurer(object):
 # ───────────────────────────── q-learning agent ───────────────────────────── #
 class AdventurerLearning(Adventurer):
 
-    def __init__(self, i: int, j: int, n: int, m: int, name='Remi'):
-        super().__init__(i, j, n, m, name)
+    def __init__(self, dungeon, name='Remi'):
+        super().__init__(dungeon)
         self.Q = np.zeros((State.max_id, 4))
 
     def play(self, state: State):
@@ -125,11 +124,6 @@ class AdventurerLearning(Adventurer):
             assert State.max_id == len(self.Q), "Q_table size don't fit with map"
         except FileNotFoundError:
             print("File to load don't exist !")
-        # except AssertionError:
-        #     print("load a normal empty Qtable..")
-        #     self.Q = np.zeros((State.max_id, 4))
-        #     print("Done")
-
 
     def save_Qtable(self, path):
         with open(path, 'w',  newline='') as csvFile:

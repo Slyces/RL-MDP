@@ -15,13 +15,16 @@ class Dungeon(object):
 
     p_enemy = 0.7
 
-    def __init__(self, n: int, m: int, nb_players: int = 1):
+    def __init__(self, n: int, m: int, nb_players: int = 1, player_classes: list= None):
         self.n, self.m = n, m
         State.configure(self.n, self.m)
         self.map = DungeonMap(n, m)
         while not self.winnable:
             self.map = DungeonMap(n, m)
-        self.agents = [AdventurerLearning(n - 1, m - 1, n, m) for i in range(nb_players)]
+        player_classes = [AdventurerLearning for i in range(nb_players)] \
+                if player_classes is None else player_classes
+        assert len(player_classes) >= nb_players
+        self.agents = [pclass(self) for pclass in player_classes[:nb_players]]
         self.last_actions = [None for i in range(nb_players)]
         self.over, self.won = False, False
         self.caption = ''
@@ -42,13 +45,17 @@ class Dungeon(object):
             if p > 0:
                 print('- {p:4.2%}: {st}'.format(p=p, st=State(s_id=i)))
 
+    # ───────────────────────── add agent post init ────────────────────────── #
+    def add_agent(self, agent: Adventurer):
+        self.agents.append(agent)
+
     # ──────────────────── constructing the reward matrix ──────────────────── #
     def make_reward_matrix(self, T: np.array):
         """
         The reward matrix is quite simple:
             - death → (*,*,*) : -1
-            - (*,0,*) → key : 1
-            - (*,1,*) → treasure : 1
+            - (*,0,*) → (*,1,*) take key : 1
+            - (*,1,*) → (*,2,*) take treasure : 1
             - (*,2,start) → (*,2,start) : 1
             - else, 0
         Negative reward for death
@@ -417,12 +424,12 @@ class Dungeon(object):
     # ────────────────────────────────── Reset ─────────────────────────────── #
     def reset(self):
         self.map.reset()
+        self.last_actions = [None for x in self.agents]
         State.configure(self.n, self.m)
         self.caption = ''
         self.over, self.won = False, False
         for agent in self.agents:
-            agent.n = self.n
-            agent.m = self.m
+            agent.n, agent.m = self.n, self.m
             agent.reset()
 
     def load_map(self, path: str):
@@ -452,9 +459,10 @@ class Dungeon(object):
     # ─────────────────────────── priting methods ──────────────────────────── #
     def show_last_actions(self):
         strings = []
-        if any([a is None for a in self.last_actions]):
+        if any([a is None for a in self.last_actions]) or not self.last_actions:
             return 'no move yet'
         for (h, agent) in enumerate(self.agents):
+            print(h, agent, self.last_actions)
             strings += ['player {} played {}'.format(
                     h, '↑→↓←'[self.last_actions[h].to_int])]
         return '\n'.join(strings)

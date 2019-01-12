@@ -10,18 +10,19 @@ import numpy as np
 # ──────────────────────────────────────────────────────────────────────────── #
 
 class MDP(Adventurer):
-    def __init__(self, i: int, j: int, n: int, m: int, name: str= 'MDP',
-            T: np.array= None, R: np.array= None):
-        super().__init__(i, j, n, m, name)
-        assert T is not None and R is not None
+    def __init__(self, dungeon: Dungeon, name: str= 'MDP'):
+        super().__init__(dungeon, name)
         n_states = State.max_id + 1
-        self.T, self.R = T, R
         self.P = np.zeros(n_states) - 1
         self.gamma = 0.9
         self.epsilon = 10e-5
+        self.reset()
 
     # ───────────────────────── configure the agent ────────────────────────── #
-    def setup(self):
+    def reset(self):
+        super().reset()
+        self.T = self.dungeon.make_transition_matrix()
+        self.R = self.dungeon.make_reward_matrix(self.T)
         self.V, self.P = self.value_iteration()
         # self.V, self.P = self.policy_iteration()
 
