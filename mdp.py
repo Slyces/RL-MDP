@@ -22,8 +22,8 @@ class MDP(Adventurer):
 
     # ───────────────────────── configure the agent ────────────────────────── #
     def setup(self):
-        # self.V, self.P = self.value_iteration()
-        self.V, self.P = self.policy_iteration()
+        self.V, self.P = self.value_iteration()
+        # self.V, self.P = self.policy_iteration()
 
     # ────────────────── test of the validity of that agent ────────────────── #
     @property
@@ -97,24 +97,21 @@ class MDP(Adventurer):
             i += 1
         return V, P
 
+class ValueMDP(MDP):
+    """ MDP using the value iteration for its policy """
+    def setup(self):
+        self.V, self.P = self.value_iteration()
+
+class PolicyMDP(MDP):
+    """ MDP using the policy iteration for its policy """
+    def setup(self):
+        self.V, self.P = self.policy_iteration()
+
+
 if __name__ == '__main__':
-
-    i = Cell.start
-    v = Cell.empty
-    s = Cell.magic_sword
-    M = Cell.moving_platform
-    p = Cell.magic_portal
-    e = Cell.enemy
-    w = Cell.wall
-    t = Cell.treasure
-    k = Cell.golden_key
-
-
     np.set_printoptions(precision=2, linewidth=300)
-    n, m = 3, 6
+    n, m = 8, 16
     d = Dungeon(n, m)
-
-    print(d)
 
     T = d.make_transition_matrix()
     R = d.make_reward_matrix(T)
@@ -123,60 +120,4 @@ if __name__ == '__main__':
     agent.setup()
 
     I = LearningInterface(d)
-    # I.play_game()
-
-    print("=" * 100)
-
-    " A map that might be giving some trouple to policy iteration "
-
-    n, m = 3, 6
-    d = Dungeon(n, m)
-
-    d.map.load_as_main(
-              [t, s, p, M, v, k,
-               v, v, e, p, w, e,
-               v, w, v, v, v, i,])
-
-    d.reset()
-
-    print(d)
-
-    T = d.make_transition_matrix()
-    R = d.make_reward_matrix(T)
-    agent, = d.agents = [MDP(n - 1, m - 1, n, m, T=T, R=R)]
-
-    agent.setup()
-
-    I = LearningInterface(d)
-    I.play_game()
-
-
-    print("=" * 100)
-
-    # n, m = 7, 17
-    # d = Dungeon(n, m)
-
-    # d.map.load_as_main(
-               # [t, k, e, e, e, e, e, e, e, e, e, e, e, e, e, e, e,
-                # w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, e,
-                # p, s, v, v, v, v, v, v, v, v, v, v, v, v, v, w, e,
-                # w, w, w, w, w, w, w, w, w, w, w, w, w, w, v, w, e,
-                # v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, w, e,
-                # v, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, e,
-                # v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, i])
-
-    # d.reset()
-
-    # T = d.make_transition_matrix()
-    # R = d.make_reward_matrix(T)
-    # agent, = d.agents = [MDP(n - 1, m - 1, n, m, T=T, R=R)]
-
-    # # V, P = agent.value_iteration()
-    # # print(V.reshape(N, 1))
-    # # print(P.reshape(N, 1))
-    # # print(np.concatenate((P.reshape(N, 1), V.reshape(N, 1)), axis=1))
-
-    # agent.setup()
-
-    # I = LearningInterface(d)
-    # I.play_game()
+    I.play_game(1)

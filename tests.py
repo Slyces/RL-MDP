@@ -123,3 +123,125 @@ def test_tansition_platforms():
     sep()
     print("Middle bottom, going up to a platform")
     custom_game.display_transition(State(1, 1, 10), Direction.NORTH)
+
+def test_policy_agent_long():
+    print("=" * 100)
+    n, m = 7, 17
+    d = Dungeon(n, m)
+
+    i = Cell.start
+    v = Cell.empty
+    s = Cell.magic_sword
+    M = Cell.moving_platform
+    p = Cell.magic_portal
+    e = Cell.enemy_normal
+    w = Cell.wall
+    t = Cell.treasure
+    k = Cell.golden_key
+
+    d.map.load_as_main(
+               [t, k, e, e, e, e, e, e, e, e, e, e, e, e, e, e, e,
+                w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, e,
+                p, s, v, v, v, v, v, v, v, v, v, v, v, v, v, w, e,
+                w, w, w, w, w, w, w, w, w, w, w, w, w, w, v, w, e,
+                v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, w, e,
+                v, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, e,
+                v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, i])
+
+    d.reset()
+
+    T = d.make_transition_matrix()
+    R = d.make_reward_matrix(T)
+    agent, = d.agents = [PolicyMDP(n - 1, m - 1, n, m, T=T, R=R)]
+
+    agent.setup()
+
+    I = LearningInterface(d)
+    I.play_game(0.1)
+    assert d.won
+
+def test_value_agent_long():
+    print("=" * 100)
+    n, m = 7, 17
+    d = Dungeon(n, m)
+
+    i = Cell.start
+    v = Cell.empty
+    s = Cell.magic_sword
+    M = Cell.moving_platform
+    p = Cell.magic_portal
+    e = Cell.enemy_normal
+    w = Cell.wall
+    t = Cell.treasure
+    k = Cell.golden_key
+
+    d.map.load_as_main(
+               [t, k, e, e, e, e, e, e, e, e, e, e, e, e, e, e, e,
+                w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, e,
+                p, s, v, v, v, v, v, v, v, v, v, v, v, v, v, w, e,
+                w, w, w, w, w, w, w, w, w, w, w, w, w, w, v, w, e,
+                v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, w, e,
+                v, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, e,
+                v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, i])
+
+    d.reset()
+
+    T = d.make_transition_matrix()
+    R = d.make_reward_matrix(T)
+    agent, = d.agents = [ValueMDP(n - 1, m - 1, n, m, T=T, R=R)]
+
+    agent.setup()
+
+    I = LearningInterface(d)
+    I.play_game(0.1)
+    assert d.won 
+
+def test_value_agent_small():
+    print("=" * 100)
+
+    n, m = 3, 6
+    d = Dungeon(n, m)
+
+    d.map.load_as_main(
+              [t, s, p, M, v, k,
+               v, v, e, p, w, e,
+               v, w, v, v, v, i,])
+
+    d.reset()
+
+    print(d)
+
+    T = d.make_transition_matrix()
+    R = d.make_reward_matrix(T)
+    agent, = d.agents = [ValueMDP(n - 1, m - 1, n, m, T=T, R=R)]
+
+    agent.setup()
+
+    I = LearningInterface(d)
+    I.play_game(0.1)
+    assert d.won
+
+def test_value_agent_small():
+    print("=" * 100)
+
+    n, m = 3, 6
+    d = Dungeon(n, m)
+
+    d.map.load_as_main(
+              [t, s, p, M, v, k,
+               v, v, e, p, w, e,
+               v, w, v, v, v, i,])
+
+    d.reset()
+
+    print(d)
+
+    T = d.make_transition_matrix()
+    R = d.make_reward_matrix(T)
+    agent, = d.agents = [PolicyMDP(n - 1, m - 1, n, m, T=T, R=R)]
+
+    agent.setup()
+
+    I = LearningInterface(d)
+    I.play_game(0.1)
+    assert d.won

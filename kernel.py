@@ -23,7 +23,7 @@ class Dungeon(object):
             self.map = DungeonMap(n, m)
         self.agents = [AdventurerLearning(n - 1, m - 1, n, m) for i in range(nb_players)]
         self.last_actions = [None for i in range(nb_players)]
-        self.over = False
+        self.over, self.won = False, False
         self.caption = ''
 
         self.teleport_distributions = {}
@@ -58,7 +58,7 @@ class Dungeon(object):
         n, m = self.n, self.m
         n_state = State.max_id + 1
         death = n_state - 1
-        R = np.zeros((n_state, 4), np.float32)
+        R = np.zeros((n_state, 4), np.float64)
         for sw in range(2):
             for tr in range(3):
                 for p in range(n * m):
@@ -70,9 +70,11 @@ class Dungeon(object):
                             certain_state = np.argmax(T[s.id, a.to_int])
                             st = State(s_id=certain_state) # target state
                             # -------------- (*,0,*) → (*,1,*) --------------- #
+                            #                             
                             if s.treasure == 0 and st.treasure == 1:
                                 R[s.id, a.to_int] = 1
                             # -------------- (*,1,*) → (*,2,*) --------------- #
+                            #                            ﰤ 
                             if s.treasure == 1 and st.treasure == 2:
                                 R[s.id, a.to_int] = 1
                             # ---------- (*,2,start) → (*,2,start) ----------- #
@@ -95,7 +97,7 @@ class Dungeon(object):
         """
         n_states = State.max_id + 1 # last state is death
         n, m = self.n, self.m
-        T = np.zeros((n_states, 4, n_states), np.float32)
+        T = np.zeros((n_states, 4, n_states), np.float64)
         S = self.markov_chain()
         M = self.moving_markov_chain()
         # ────────────────────────── for each state ────────────────────────── #
@@ -116,11 +118,12 @@ class Dungeon(object):
                         s.position = k * m + l
                         reverse_dir = direction.reverse
                         T[s.id, reverse_dir.to_int, :] = transitions
+        # ─────────── any action not yet found is to stay inplace ──────────── #
         for sid in range(n_states):
             for a in Direction:
                 s = State(s_id=sid)
                 if sum(T[s.id, a.to_int]) == 0:
-                    mu = np.zeros(n_states, np.float32)
+                    mu = np.zeros(n_states, np.float64)
                     mu[s.id] = 1
                     T[s.id, a.to_int, :] = S.iterate(mu)
         return T
@@ -184,13 +187,13 @@ class Dungeon(object):
         assert self.map[p] in (Cell.magic_portal, Cell.moving_platform)
 
         # ────────────────── checking for existing results ─────────────────── #
-        distrib = np.zeros(n * m, np.float32)
+        distrib = np.zeros(n * m, np.float64)
         if p in self.teleport_distributions:
             distrib = self.teleport_distributions[p]
         # ─────────────── compute the results if not available ─────────────── #
         else:
             # Create a probability vector where we are in p
-            mu = np.zeros(n * m, np.float32)
+            mu = np.zeros(n * m, np.float64)
             mu[p] = 1
             distrib = M.convergence_iteration(mu)
             self.teleport_distributions[p] = distrib
@@ -205,7 +208,7 @@ class Dungeon(object):
         padding = state.sword * 3 + state.treasure
         block_size = n * m
 
-        transition = np.zeros(State.max_id + 1, np.float32)
+        transition = np.zeros(State.max_id + 1, np.float64)
         transition[padding * block_size: (padding + 1) * block_size] = distrib
 
         # ───── iterate once the new states over the rest of the dungeon ───── #
@@ -216,7 +219,7 @@ class Dungeon(object):
     # ──────────────────── constructing the markov chain ───────────────────── #
     def markov_chain(self):
         n_state = State.max_id + 1 # because max id is n - 1
-        M = np.zeros((n_state, n_state), np.float32)
+        M = np.zeros((n_state, n_state), np.float64)
         n, m = self.n, self.m
         death = n_state - 1
         M[death, death] = 1
@@ -241,6 +244,12 @@ class Dungeon(object):
                     if cell == Cell.enemy_normal and state.sword:
                         M[index, index] = 1 # fight won
                     if cell == Cell.enemy_normal and not state.sword:
+                        M[index, index] = 1 - Dungeon.p_enemy
+                        M[index, death] = Dungeon.p_enemy
+                    # ───────── political enemy : do not use a sword ───────── #
+                    if cell == Cell.enemy_special and not state.sword:
+                        M[index, index] = 1 # not dangerous when weaponless
+                    if cell == Cell.enemy_special and state.sword:
                         M[index, index] = 1 - Dungeon.p_enemy
                         M[index, death] = Dungeon.p_enemy
                     # ─────────────── magic sword acquisition ──────────────── #
@@ -274,7 +283,7 @@ class Dungeon(object):
         """
         n, m = self.n, self.m
         n_state = n * m
-        M = np.zeros((n_state, n_state), np.float32)
+        M = np.zeros((n_state, n_state), np.float64)
         for p in range(n * m):
             i, j = p // m, p % m
             cell = self.map[i, j]
@@ -327,7 +336,7 @@ class Dungeon(object):
         @return an int representing the reward of the move
         """
         # assert cell != Cell.wall, "wall cells should never be entered"
-
+        sword = agent.has_item(Cell.magic_sword)
         # -------------- walls bounce back to starting position -------------- #
         if cell == Cell.wall:
             self.caption += "Bounced against a wall ... Back to start !"
@@ -372,7 +381,8 @@ class Dungeon(object):
                 self.caption += "But it's ineffective."
             # 60% : nothing
         # ----------------------------- FIGHT !! ----------------------------- #
-        elif cell == Cell.enemy_normal and not agent.has_item(Cell.magic_sword):
+        # -------------------- normal enemy (use a sword) -------------------- #
+        elif cell == Cell.enemy_normal and not sword:
             # no fight for the brave wielding a sword
             self.caption += "Enemy in sight ! "
             p = random() # random floating number in [0, 1[
@@ -381,20 +391,20 @@ class Dungeon(object):
             else:
                 self.caption += "Woops, I'm dead"
                 self.kill(agent)
-        elif cell == Cell.enemy_normal:
+        elif cell == Cell.enemy_normal and sword:
             self.caption += "BIM ! BAM ! MAGIC SWORD IN YOUR FACE !"
-        elif cell == Cell.enemy_special and not agent.has_item(Cell.magic_sword):
+        # -------------------------- special enemy --------------------------- #
+        elif cell == Cell.enemy_special and not sword:
             # don't fight
             self.caption += "Not a threat for me."
-        elif cell == Cell.enemy_special:
-            self.caption += "Enemy in sight ! "
+        elif cell == Cell.enemy_special and sword:
+            self.caption += "This enemy can't be slain ! "
             p = random()  # random floating number in [0, 1[
             if p > Dungeon.p_enemy:  # the player is victorious (p_enemy)%
-                self.caption += "Easily defeated."
+                self.caption += "I managed to flee."
             else:
-                self.caption += "Woops, I'm dead"
+                self.caption += "Goodbye, sweet world"
                 self.kill(agent)
-
         # ------------ returning to the start (with the treasure) ------------ #
         elif cell == Cell.start and agent.has_item(Cell.treasure):
             self.caption += "I WON. !!!"
@@ -409,7 +419,7 @@ class Dungeon(object):
         self.map.reset()
         State.configure(self.n, self.m)
         self.caption = ''
-        self.over = False
+        self.over, self.won = False, False
         for agent in self.agents:
             agent.n = self.n
             agent.m = self.m
@@ -426,11 +436,11 @@ class Dungeon(object):
     # ────────────────────────── victory and defeat ────────────────────────── #
     def victory(self, agent: Adventurer):
         """ Method to restart the simulation and handle a victory """
-        self.over = True
+        self.won, self.over = True, True
 
     def defeat(self):
         """ Method to restart the simulation and handle defeat """
-        self.over = True
+        self.won, self.over = False, True
 
     def kill(self, agent: Adventurer):
         """ Method handling the death of an agent """
@@ -504,18 +514,6 @@ class Dungeon(object):
 
     def __repr__(self):
         return "Dungeon({} x {}, {} players)".format(self.n, self.m, len(self.agents))
-
-    # ─────────────────── print the different astar paths ──────────────────── #
-    def display_paths(self):
-        # --------------------- find the different paths --------------------- #
-        astar = AStar(unreachable=(Cell.wall, Cell.crack, Cell.magic_portal))
-        astar.load_map(self.map)
-        key, treasure, start = None, (0, 0), (self.n - 1, self.m - 1)
-        for h in range(self.m * self.n):
-            if self.map[h] == Cell.golden_key:
-                key = (h // self.m, h % self.m)
-        path_to_key      = astar.process_shortest_path(start, key)
-        path_to_treasure = astar.process_shortest_path(key, treasure)
         path_back        = astar.process_shortest_path(treasure, start)
 
         # ----------------------- version with colors ------------------------ #

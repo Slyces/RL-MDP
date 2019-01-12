@@ -25,12 +25,12 @@ class Direction(Enum):
 
 # ─────────────────────────────── Cells Types ──────────────────────────────── #
 class Cell(Enum):
-    pretty_cells = False
+    pretty_cells = True
     empty = '  '[pretty_cells]
     start = '◉◉'[pretty_cells]
     wall = '■■'[pretty_cells]
     enemy_normal = 'Eﲅ'[pretty_cells]
-    enemy_special = 'QQ'[pretty_cells]
+    enemy_special = 'Q'[pretty_cells]
     trap = 'R☠'[pretty_cells]
     crack = 'Cﲯ'[pretty_cells]
     treasure = 'Tﰤ'[pretty_cells]

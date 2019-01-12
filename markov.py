@@ -12,8 +12,6 @@ class MarkovChain(np.ndarray):
     def __init__(self, matrix: np.array):
         super().__init__()
         self.chain_size = self.shape[0]
-        print(np.abs(np.sum(self, 1) - 1))
-        print(np.amax(self, 1))
         assert all(np.abs(np.sum(self, 1) - 1) < 10e-6)
 
     def iterate(self, mu: np.array, n: int= 1):
@@ -22,7 +20,9 @@ class MarkovChain(np.ndarray):
 
         returns the distribution in n steps
         """
-        return np.matmul(mu, matrix_power(self, n))
+        mu = np.matmul(mu, matrix_power(self, n))
+        assert abs(np.sum(mu) - 1) < 10e-6, "Σμ != 1"
+        return mu
 
     def convergence_iteration(self, mu: np.array, epsilon: float= 10e-9):
         mu_next = self.iterate(mu)

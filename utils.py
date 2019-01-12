@@ -23,9 +23,11 @@ def rand_argmax(b, *args, **kwargs):
     amax = np.amax(b, *args, **kwargs).reshape(b.shape[0], 1)
     return np.argmax(np.random.random(b.shape) * (b == amax), *args, **kwargs)
 
-def add_sword(string):
-    string = string.replace('S ', '理')
-    return string.replace(' S*', '*理')
+def add_sword(string: str, pretty: bool= False):
+    if pretty:
+        string = string.replace('S ', '理')
+        return string.replace(' S*', '*理')
+    return string
 
 def add_color(string: str, fg: Color= Color.white):
     """
