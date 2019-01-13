@@ -108,7 +108,7 @@ def setup_parser():
                 """ + default))
 
     # file to load for Qtable
-    timestep.add_argument("--load_table", metavar="qtable",
+    timestep.add_argument("--load-table", metavar="qtable",
                           dest='qtable', type=str, default="",
                           help=textwrap.dedent("""\
                     load an existing Qtable (Warning : must be for a spécified map)
@@ -210,7 +210,7 @@ if __name__ == '__main__':
     dungeon = Dungeon(args.r, args.c, 1, [advClass])
 
     if args.map_path:
-        if args.map_path[-4:] == '.txt':
+        if args.map_path[-4:] != '.txt':
             print("The map path provided is not a valid txt file.")
             exit(0)
         dungeon.load_map(args.map_path)
@@ -263,8 +263,6 @@ if __name__ == '__main__':
                 a.append(k)
         ratio = len(a) / t
         print("% victory : ", (ratio*100), "%")
-
-
 
 
     # ───────────────────────── select the interface ───────────────────────── #
