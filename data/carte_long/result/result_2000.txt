@@ -1,0 +1,2 @@
+nombre iter pour 2000 : 57.6
+ratio : 0.4166666666666667

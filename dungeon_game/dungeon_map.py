@@ -85,7 +85,7 @@ class DungeonMap(object):
         a treasure (bottom top corner).
         """
         self.n, self.m = n, m
-        self.default = True
+        self.default = False
         self.__grid = [Cell.empty for i in range(self.n * self.m)]
         self[0, 0] = Cell.treasure
         self[n - 1, m - 1] = Cell.start

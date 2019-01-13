@@ -112,6 +112,9 @@ class AdventurerLearning(Adventurer):
     def load_Qtable(self, tab: float):
         self.Q = tab
 
+    def reset_Qtable(self):
+        self.Q = np.zeros((State.max_id, 4))
+
     def load_Qtable_from_file(self, path: str):
         try:
             with open(path, "r") as csv_file:

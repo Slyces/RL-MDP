@@ -361,9 +361,12 @@ class Dungeon(object):
                 return 0.5
         # ------------------ treasure is particular, though ------------------ #
         elif cell == Cell.treasure and agent.has_item(Cell.golden_key):
-            self.caption += "Got the treasure !"
-            agent.acquire_item(cell)
-            return 0.5
+            if agent.has_item(cell):
+                self.caption += "Can't pick up another {}, already have one".format(cell.name)
+            else:
+                self.caption += "Got the treasure !"
+                agent.acquire_item(cell)
+                return 0.5
         # ------------ magic portal and moving platforms teleport ------------ #
         elif cell == Cell.magic_portal:
             valid_cell = self.map.random_cell_dist()
@@ -428,6 +431,7 @@ class Dungeon(object):
     # ────────────────────────────────── Reset ─────────────────────────────── #
     def reset(self):
         self.map.reset()
+        self.m, self.n = self.map.m, self.map.n
         self.last_actions = [None for x in self.agents]
         State.configure(self.n, self.m)
         self.caption = ''
@@ -438,7 +442,6 @@ class Dungeon(object):
 
     def load_map(self, path: str):
         self.map.load_map(path)
-        self.m, self.n = self.map.m, self.map.n
         self.reset()
 
     def save_map(self, path: str):

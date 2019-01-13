@@ -1,2 +1,2 @@
-ratio : 0.10471204188481675
-nombre iter : 127.4
+ratio : 0.0021
+nombre iter : 179.71428571428572
