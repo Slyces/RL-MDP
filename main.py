@@ -216,7 +216,7 @@ if __name__ == '__main__':
                 'qlearning': AdventurerLearning }[args.policy]
 
 
-    dungeon = Dungeon(args.r, args.c, 1, [advClass])
+    dungeon = Dungeon(args.r, args.c, 1, [advClass], args.new_env)
 
 
     if args.map_path:
