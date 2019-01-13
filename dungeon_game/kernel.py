@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 # ───────────────────────────────── imports ────────────────────────────────── #
+from .markov import MarkovChain
+from .characters import Adventurer, AdventurerLearning,State
+from .dungeon_map import DungeonMap, Direction, Cell, AStar
+from .utils import Color, color_grid
 from random import random
-from markov import MarkovChain
-from characters import Adventurer, AdventurerLearning,State
-from dungeon_map import DungeonMap, Direction, Cell, AStar
-import utils, numpy as np
+import numpy as np
 # ──────────────────────────────────────────────────────────────────────────── #
-# @TODO (for the indian coding team) visualize a policy
 
 # ────────────── Kernel classes for the MADI project (01/2019) ─────────────── #
 class Dungeon(object):
@@ -466,13 +466,11 @@ class Dungeon(object):
         if any([a is None for a in self.last_actions]) or not self.last_actions:
             return 'no move yet'
         for (h, agent) in enumerate(self.agents):
-            print(h, agent, self.last_actions)
             strings += ['player {} played {}'.format(
                     h, '↑→↓←'[self.last_actions[h].to_int])]
         return '\n'.join(strings)
 
     def colored_str(self):
-        from utils import Color, color_grid
         n, m = self.n, self.m
         key = None
         sword = None
@@ -504,7 +502,7 @@ class Dungeon(object):
             legends.append('{}: agent {}\'s position'.format(agents_symbols[h], h))
 
         legend = '\n'.join(legends)
-        return colored_map + legend + '\n'
+        return colored_map + legend
 
     # ──────────────────────────── magic methods ───────────────────────────── #
     def __str__(self):
@@ -552,39 +550,39 @@ class Dungeon(object):
 
 
 # ──────────────────────────────── executable ──────────────────────────────── #
-if __name__ == '__main__':
-    np.set_printoptions(precision=5, linewidth=200)
+# if __name__ == '__main__':
+    # np.set_printoptions(precision=5, linewidth=200)
 
-    custom_game = Dungeon(4, 3)
-    b = Cell.start
-    p = Cell.magic_portal
-    e = Cell.empty
-    s = Cell.magic_sword
-    m = Cell.moving_platform
-    t = Cell.treasure
-    k = Cell.golden_key
+    # custom_game = Dungeon(4, 3)
+    # b = Cell.start
+    # p = Cell.magic_portal
+    # e = Cell.empty
+    # s = Cell.magic_sword
+    # m = Cell.moving_platform
+    # t = Cell.treasure
+    # k = Cell.golden_key
 
-    # custom_game.map.load([t, p, p, s,
-    #                       p, p, m, p,
-    #                       m, p, m, m,
-    #                       k, m, p, b])
-    custom_game.map.load([t, e, s,
-                          e, m, e,
-                          e, m, e,
-                          k, e, b])
+    # # custom_game.map.load([t, p, p, s,
+    # #                       p, p, m, p,
+    # #                       m, p, m, m,
+    # #                       k, m, p, b])
+    # custom_game.map.load([t, e, s,
+                          # e, m, e,
+                          # e, m, e,
+                          # k, e, b])
 
-    print(custom_game)
+    # print(custom_game)
 
-    S = custom_game.markov_chain()
-    M = custom_game.moving_markov_chain()
+    # S = custom_game.markov_chain()
+    # M = custom_game.moving_markov_chain()
 
-    # print(State(0, 0, 11))
+    # # print(State(0, 0, 11))
 
-    # tr = custom_game.special_transition(S, M, State(0, 0, 11))
-    # for (i, p) in enumerate(tr):
-        # s = State(s_id=i)
-        # if p > 0:
-            # print('- {:4.2%}: {}'.format(p, s))
+    # # tr = custom_game.special_transition(S, M, State(0, 0, 11))
+    # # for (i, p) in enumerate(tr):
+        # # s = State(s_id=i)
+        # # if p > 0:
+            # # print('- {:4.2%}: {}'.format(p, s))
 
-    T = custom_game.make_transition_matrix()
-    custom_game.display_transition(State(0, 0, 15), Direction.NORTH)
+    # T = custom_game.make_transition_matrix()
+    # custom_game.display_transition(State(0, 0, 15), Direction.NORTH)

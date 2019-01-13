@@ -1,9 +1,9 @@
 # ───────────────────────────────── imports ────────────────────────────────── #
 import csv
 
-from dungeon_map import Direction, Cell
-from utils import vprint
-from states import State
+from .dungeon_map import Direction, Cell
+from .utils import vprint
+from .states import State
 import numpy as np, random
 # ──────────────────────────────────────────────────────────────────────────── #
 # ──────────────────────────────── adventurer ──────────────────────────────── #

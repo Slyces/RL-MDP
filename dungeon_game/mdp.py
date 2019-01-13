@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # enconding: utf-8
 # ───────────────────────────────── imports ────────────────────────────────── #
-from characters import State, Adventurer
-from kernel import Dungeon
-from interface import TextInterface, LearningInterface
-from dungeon_map import Direction, Cell
-from utils import rand_argmax
+from .characters import State, Adventurer
+from .kernel import Dungeon
+from .dungeon_map import Direction, Cell
+from .utils import rand_argmax
 import numpy as np
 # ──────────────────────────────────────────────────────────────────────────── #
 
@@ -109,16 +108,16 @@ class PolicyMDP(MDP):
         self.V, self.P = self.policy_iteration()
 
 
-if __name__ == '__main__':
-    np.set_printoptions(precision=2, linewidth=300)
-    n, m = 8, 16
-    d = Dungeon(n, m)
+# if __name__ == '__main__':
+    # np.set_printoptions(precision=2, linewidth=300)
+    # n, m = 8, 16
+    # d = Dungeon(n, m)
 
-    T = d.make_transition_matrix()
-    R = d.make_reward_matrix(T)
-    agent, = d.agents = [MDP(n - 1, m - 1, n, m, T=T, R=R)]
+    # T = d.make_transition_matrix()
+    # R = d.make_reward_matrix(T)
+    # agent, = d.agents = [MDP(n - 1, m - 1, n, m, T=T, R=R)]
 
-    agent.setup()
+    # agent.setup()
 
-    I = LearningInterface(d)
-    I.play_game(1)
+    # I = LearningInterface(d)
+    # I.play_game(1)

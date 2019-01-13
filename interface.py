@@ -1,9 +1,9 @@
 # encoding: utf-8
 # ───────────────────────────────── imports ────────────────────────────────── #
-from kernel import Dungeon, Direction
-from dungeon_map import Cell
+from dungeon_game.kernel import Dungeon, Direction
+from dungeon_game.dungeon_map import Cell
+from dungeon_game.utils import add_sword
 from time import sleep
-from utils import add_sword
 from tkinter.font import Font
 import os, sys, tkinter as tk
 # ──────────────────────────────────────────────────────────────────────────── #
@@ -54,13 +54,16 @@ class TextInterface(object):
         print(add_sword(self.dungeon.colored_str(), Cell.pretty_cells))
         print('-' * (1 + self.dungeon.m * 4))
         print(self.dungeon.show_last_actions())
+        print('-' * (1 + self.dungeon.m * 4))
         print(add_sword(self.infos, Cell.pretty_cells))
+        print('-' * (1 + self.dungeon.m * 4))
         print(self.dungeon.caption)
         self.dungeon.caption = ''
 
     @property
     def infos(self):
-        inf = ['-' * (1 + self.dungeon.m * 4)]
+        # inf = ['-' * (1 + self.dungeon.m * 4)]
+        inf = []
         for agent in self.dungeon.agents:
             inf += [agent.infos]
         return '\n'.join(inf)
@@ -95,7 +98,9 @@ class LearningInterface(TextInterface):
         print(add_sword(self.dungeon.colored_str(), Cell.pretty_cells)) # color
         print('-' * (1 + self.dungeon.m * 4))
         print(self.dungeon.show_last_actions())
+        print('-' * (1 + self.dungeon.m * 4))
         print(add_sword(self.infos, Cell.pretty_cells))
+        print('-' * (1 + self.dungeon.m * 4))
         print(self.dungeon.caption)
         self.dungeon.caption = ''
 
@@ -142,7 +147,6 @@ class GraphicalInterface(TextInterface, tk.Tk):
         # ────────────────────────── infos display ─────────────────────────── #
         f_width = myInfoFont.measure('x')
         w = int((cell_size * m) / f_width)
-        print(cell_size * m, f_width, w)
 
         frame = tk.Frame(self) #, height=100)
         # frame.pack_propagate(False)
@@ -175,9 +179,8 @@ class GraphicalInterface(TextInterface, tk.Tk):
         # text_info = '-' * (1 + self.dungeon.m * 4) + '\n'
         actions     = self.dungeon.show_last_actions()
         infos       = add_sword(self.infos, Cell.pretty_cells)
-        caption     = '-' * (1 + self.dungeon.m * 4) + '\n' + self.dungeon.caption
-
-        print(actions, infos, caption)
+        # caption     = '-' * (1 + self.dungeon.m * 4) + '\n' + self.dungeon.caption
+        caption     = self.dungeon.caption
 
         self.message_actions.configure(text=actions)
         self.message_infos.configure(text=infos)
@@ -191,6 +194,8 @@ class GraphicalInterface(TextInterface, tk.Tk):
         if not self.dungeon.over:
             self.handle_input(event.char)
             self.display()
+        print(' GAME OVER '.center(80, '-'))
+        self.message_caption['text'] += '\n' + ' GAME OVER '.center(80, '-')
 
     # ──────────────── automatic agent∙s playing on keypress ───────────────── #
     def play_game_step(self):

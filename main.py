@@ -2,8 +2,8 @@
 # encoding: utf-8
 # ───────────────────────────────── imports ────────────────────────────────── #
 from interface import TextInterface, GraphicalInterface
-from mdp import *
-from kernel import Dungeon
+from dungeon_game.mdp import *
+from dungeon_game.kernel import Dungeon
 # ──────────────────────────────────────────────────────────────────────────── #
 
 if __name__ == '__main__':

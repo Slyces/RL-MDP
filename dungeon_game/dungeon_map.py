@@ -3,7 +3,6 @@
 from enum import Enum
 from random import choice as rchoice, randint
 from numpy.random import choice as npchoice
-import utils
 # ─────────────────────────── Cardinal Directions ──────────────────────────── #
 class Direction(Enum):
     NORTH = (-1, 0)
