@@ -5,8 +5,7 @@ from interface import TextInterface, GraphicalInterface
 from dungeon_game.characters import *
 from dungeon_game.mdp import *
 from dungeon_game.kernel import Dungeon
-import sys
-import argparse, textwrap
+import sys ,argparse, textwrap
 # ──────────────────────────────────────────────────────────────────────────── #
 
 def test_agent(dungeon: Dungeon, iterations: int= 500):

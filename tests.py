@@ -2,9 +2,10 @@
 # encoding: utf-8
 # ───────────────────────────────── imports ────────────────────────────────── #
 import pytest, numpy as np
-from kernel import Dungeon
-from characters import State
-from dungeon_map import Direction, Cell
+from dungeon_game.states import State
+from dungeon_game.dungeon_map import Direction, Cell
+from dungeon_game.mdp import *
+from interface import *
 from random import randint as rdi
 # ──────────────────────────────────────────────────────────────────────────── #
 np.set_printoptions(precision=5, linewidth=200)
@@ -127,7 +128,7 @@ def test_tansition_platforms():
 def test_policy_agent_long():
     print("=" * 100)
     n, m = 7, 17
-    d = Dungeon(n, m)
+    d = Dungeon(n, m, 1, [PolicyMDP])
 
     i = Cell.start
     v = Cell.empty
@@ -149,12 +150,6 @@ def test_policy_agent_long():
                 v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, i])
 
     d.reset()
-
-    T = d.make_transition_matrix()
-    R = d.make_reward_matrix(T)
-    agent, = d.agents = [PolicyMDP(n - 1, m - 1, n, m, T=T, R=R)]
-
-    agent.setup()
 
     I = LearningInterface(d)
     I.play_game(0.1)
@@ -163,7 +158,7 @@ def test_policy_agent_long():
 def test_value_agent_long():
     print("=" * 100)
     n, m = 7, 17
-    d = Dungeon(n, m)
+    d = Dungeon(n, m, 1, [ValueMDP])
 
     i = Cell.start
     v = Cell.empty
@@ -185,12 +180,6 @@ def test_value_agent_long():
                 v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, v, i])
 
     d.reset()
-
-    T = d.make_transition_matrix()
-    R = d.make_reward_matrix(T)
-    agent, = d.agents = [ValueMDP(n - 1, m - 1, n, m, T=T, R=R)]
-
-    agent.setup()
 
     I = LearningInterface(d)
     I.play_game(0.1)
@@ -200,7 +189,17 @@ def test_value_agent_small():
     print("=" * 100)
 
     n, m = 3, 6
-    d = Dungeon(n, m)
+    d = Dungeon(n, m, 1, [ValueMDP])
+
+    i = Cell.start
+    v = Cell.empty
+    s = Cell.magic_sword
+    M = Cell.moving_platform
+    p = Cell.magic_portal
+    e = Cell.enemy_normal
+    w = Cell.wall
+    t = Cell.treasure
+    k = Cell.golden_key
 
     d.map.load_as_main(
               [t, s, p, M, v, k,
@@ -210,12 +209,6 @@ def test_value_agent_small():
     d.reset()
 
     print(d)
-
-    T = d.make_transition_matrix()
-    R = d.make_reward_matrix(T)
-    agent, = d.agents = [ValueMDP(n - 1, m - 1, n, m, T=T, R=R)]
-
-    agent.setup()
 
     I = LearningInterface(d)
     I.play_game(0.1)
@@ -225,7 +218,17 @@ def test_value_agent_small():
     print("=" * 100)
 
     n, m = 3, 6
-    d = Dungeon(n, m)
+    d = Dungeon(n, m, 1, [PolicyMDP])
+
+    i = Cell.start
+    v = Cell.empty
+    s = Cell.magic_sword
+    M = Cell.moving_platform
+    p = Cell.magic_portal
+    e = Cell.enemy_normal
+    w = Cell.wall
+    t = Cell.treasure
+    k = Cell.golden_key
 
     d.map.load_as_main(
               [t, s, p, M, v, k,
@@ -235,12 +238,6 @@ def test_value_agent_small():
     d.reset()
 
     print(d)
-
-    T = d.make_transition_matrix()
-    R = d.make_reward_matrix(T)
-    agent, = d.agents = [PolicyMDP(n - 1, m - 1, n, m, T=T, R=R)]
-
-    agent.setup()
 
     I = LearningInterface(d)
     I.play_game(0.1)

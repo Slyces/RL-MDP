@@ -30,7 +30,7 @@ class Cell(Enum):
     wall = '■■'[pretty_cells]
     enemy_normal = 'Eﲅ'[pretty_cells]
     enemy_special = 'Q'[pretty_cells]
-    trap = 'R☠'[pretty_cells]
+    trap = 'R'[pretty_cells]
     crack = 'Cﲯ'[pretty_cells]
     treasure = 'Tﰤ'[pretty_cells]
     magic_sword = 'SS'[pretty_cells]

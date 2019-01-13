@@ -53,7 +53,7 @@ class MDP(Adventurer):
 
         # ──────────────────────────── main loop ───────────────────────────── #
         i = 0
-        while not (np.abs(V - lV) < self.epsilon).all() and i < 1000:
+        while not (np.abs(V - lV) < self.epsilon).all() and i < 10000:
             lV = V # lV is last V
             Q = R + self.gamma * np.matmul(T, V)
             V = np.amax(Q, axis=1)
@@ -84,7 +84,7 @@ class MDP(Adventurer):
         # ──────────────────────────── main loop ───────────────────────────── #
         i = 0
         while not (lP == P).all() and (np.amax(Q, 1) > np.amax(lQ, 1)).any() \
-                and i < 8000:
+                and i < 10000:
             lP, lQ = P, Q
             Ts = T[np.arange(n_states), P, :] # Transitions of current Policy
             Rs = R[np.arange(n_states), P]
