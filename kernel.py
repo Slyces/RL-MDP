@@ -88,6 +88,8 @@ class Dungeon(object):
                             if s.treasure == st.treasure == 2 and \
                                     s.position == st.position == n * m - 1:
                                 R[s.id, a.to_int] = 1
+                            if s.sword == 0 and st.sword == 1:
+                                R[s.id, a.to_int] = 0.5
                             # ---------------- death → death ----------------- #
                             if s.id == st.id == death:
                                 R[s.id, a.to_int] = -1
@@ -355,8 +357,7 @@ class Dungeon(object):
             else:
                 self.caption += "Picked up an item ({}) !!".format(cell.name)
                 agent.acquire_item(cell)
-                if cell == Cell.golden_key: return 0.5
-                else: return 0
+                return 0.5
         # ------------------ treasure is particular, though ------------------ #
         elif cell == Cell.treasure and agent.has_item(Cell.golden_key):
             self.caption += "Got the treasure !"

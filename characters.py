@@ -10,7 +10,7 @@ import numpy as np, random
 class Adventurer(object):
     """ Adventurer for the MDP game. """
 
-    def __init__(self, dungeon, name='Remi'):
+    def __init__(self, dungeon, name='Indiana'):
         """
         Initializes an adventurer at position (i, j)
             - where i in the row and j the column
@@ -134,7 +134,7 @@ class AdventurerLearning(Adventurer):
 class Qlearning(object):
     beta = 8
     learning_rate = 0.1
-    gamma = 0.9
+    gamma = 0.7
 
     def policy(q_table: float, state: State):
         row = q_table[state.id]
