@@ -5,6 +5,7 @@ from interface import TextInterface, GraphicalInterface
 from dungeon_game.characters import *
 from dungeon_game.mdp import *
 from dungeon_game.kernel import Dungeon
+import sys
 import argparse, textwrap
 # ──────────────────────────────────────────────────────────────────────────── #
 
@@ -99,6 +100,20 @@ def setup_parser():
             Number of games to test the agent's performance
             """ + default))
 
+    # Value of the iteration for Qlearning
+    timestep.add_argument("--iteration", metavar="iteration",
+                          dest='iteration', type=int, default=5000,
+                          help=textwrap.dedent("""\
+                number of iteration for the Qlearning algorithm
+                """ + default))
+
+    # file to load for Qtable
+    timestep.add_argument("--load_table", metavar="qtable",
+                          dest='qtable', type=str, default="",
+                          help=textwrap.dedent("""\
+                    load an existing Qtable (Warning : must be for a spécified map)
+                    """ + default))
+
     # Play an given policy
     valid_agents= ('value-mdp', 'policy-mdp', 'qlearning')
     game_modes.add_argument("-p", "--policy", metavar="policy", dest='policy',
@@ -120,10 +135,10 @@ def setup_parser():
             help=textwrap.dedent("""\
             plays the game interactively.
             keys to interact with the game:
-                - H, Q : ←
-                - J, S : ↓
-                - K, Z : ↑
-                - L, D : →
+                - H, Q : gauche
+                - J, S : bas
+                - K, Z : haut
+                - L, D : droite
                 - ctrl-C : quit the game
             """) + default)
 
@@ -203,6 +218,54 @@ if __name__ == '__main__':
     if args.check_winnable and args.random_map:
         while not dungeon.winnable:
             dungeon = Dungeon(args.r, args.c, 1, [advClass])
+
+
+    if args.policy == 'qlearning':
+        player = dungeon.agents[0]
+        if args.qtable:
+            player.load_Qtable_from_file(args.qtable)
+        else:
+            player.reset_Qtable()
+
+            for i in range(args.iteration):
+                q_table = player.Q
+                dungeon.reset()
+                player.load_Qtable(q_table)
+                t = 0
+                while not dungeon.over and t <= 2000:
+                    t +=1
+                    dungeon.caption = ''
+                    old_state = player.state
+                    action = player.policy()
+                    reward = dungeon.move(player, action)
+                    new_state = player.state
+                    player.process_reward(old_state, new_state, action, reward)
+                if i % 100 == 0:
+                    print(i)
+        print("Evaluation of learning...")
+        q_table = player.Q
+        dungeon.reset()
+        player.load_Qtable(q_table)
+        a = []
+        t = 0
+        while len(a) < 100 and t < 10000:
+            t += 1
+            k = 0
+            q_table = player.Q
+            dungeon.reset()
+            player.load_Qtable(q_table)
+            while not dungeon.over and k <= 2000:
+                dungeon.caption = ''
+                action = player.policy()
+                dungeon.move(player, action)
+                k += 1
+            if player.alive and k < 2000:
+                a.append(k)
+        ratio = len(a) / t
+        print("% victory : ", (ratio*100), "%")
+
+
+
 
     # ───────────────────────── select the interface ───────────────────────── #
     interface = None
