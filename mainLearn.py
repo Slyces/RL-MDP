@@ -1,10 +1,12 @@
 # encoding: utf-8
-import time, kernel, csv, numpy as np
+import time, dungeon_game.kernel, csv, numpy as np
+
+from dungeon_game.characters import AdventurerLearning
 from interface import LearningInterface
 import os
 
 if __name__ == '__main__':
-    game = kernel.Dungeon(3, 6)
+    game = dungeon_game.kernel.Dungeon(3, 6, 1, [AdventurerLearning])
     inter = LearningInterface(game)
     player, = game.agents
 
