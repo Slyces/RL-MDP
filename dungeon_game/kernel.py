@@ -19,17 +19,21 @@ class Dungeon(object):
         self.n, self.m = n, m
         State.configure(self.n, self.m)
         self.map = DungeonMap(n, m)
+
+        # ------------------------ creating a new map ------------------------ #
         while not self.winnable:
             self.map = DungeonMap(n, m)
-        assert len(player_classes) >= nb_players
+
         self.last_actions = [None for i in range(nb_players)]
         self.over, self.won = False, False
         self.caption = ''
 
         self.teleport_distributions = {}
 
+        # ------------------------ generating players ------------------------ #
         player_classes = [AdventurerLearning for i in range(nb_players)] \
                 if player_classes is None else player_classes
+        assert len(player_classes) >= nb_players
         self.agents = [pclass(self) for pclass in player_classes[:nb_players]]
 
         State.configure(n, m)
@@ -78,19 +82,22 @@ class Dungeon(object):
                             certain_state = np.argmax(T[s.id, a.to_int])
                             st = State(s_id=certain_state) # target state
                             # -------------- (*,0,*) → (*,1,*) --------------- #
-                            #                             
+                            #                (*  *)   (*  *)
                             if s.treasure == 0 and st.treasure == 1:
                                 R[s.id, a.to_int] = 0.5
                             # -------------- (*,1,*) → (*,2,*) --------------- #
-                            #                            ﰤ 
+                            #                (*  *)   (* ﰤ *)
                             if s.treasure == 1 and st.treasure == 2:
                                 R[s.id, a.to_int] = 0.5
+                            # -------------- (0,*,*) → (1,*,*) --------------- #
+                            #                ( * *)   (理* *)
+                            if s.sword == 0 and st.sword == 1:
+                                R[s.id, a.to_int] = 0.5
                             # ---------- (*,2,start) → (*,2,start) ----------- #
+                            #            (* 2 ◉ )      (* 2 ◉ ) 
                             if s.treasure == st.treasure == 2 and \
                                     s.position == st.position == n * m - 1:
                                 R[s.id, a.to_int] = 1
-                            if s.sword == 0 and st.sword == 1:
-                                R[s.id, a.to_int] = 0.5
                             # ---------------- death → death ----------------- #
                             if s.id == st.id == death:
                                 R[s.id, a.to_int] = -1
