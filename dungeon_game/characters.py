@@ -27,6 +27,11 @@ class Adventurer(object):
         self.alive = True
         self.pos = (self.dungeon.n - 1, self.dungeon.m - 1)
 
+    def soft_reset(self):
+        self.__items = []
+        self.alive = True
+        self.pos = (self.dungeon.n - 1, self.dungeon.m - 1)
+
     # ───────────────────────── getter for the state ───────────────────────── #
     @property
     def state(self):

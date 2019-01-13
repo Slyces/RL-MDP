@@ -430,6 +430,7 @@ class Dungeon(object):
 
     # ────────────────────────────────── Reset ─────────────────────────────── #
     def reset(self):
+        """ Hard reset : resets the map, and every agent """
         self.map.reset()
         self.m, self.n = self.map.m, self.map.n
         self.last_actions = [None for x in self.agents]
@@ -439,6 +440,15 @@ class Dungeon(object):
         for agent in self.agents:
             agent.n, agent.m = self.n, self.m
             agent.reset()
+
+    def replay_map(self):
+        """ Soft reset to replay the same map """
+        self.map.reset()
+        self.last_actions = [None for x in self.agents]
+        self.caption = ''
+        self.over, self.won = False, False
+        for agent in self.agents:
+            agent.soft_reset()
 
     def load_map(self, path: str):
         self.map.load_map(path)

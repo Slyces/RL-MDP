@@ -8,7 +8,24 @@ from dungeon_game.kernel import Dungeon
 import argparse, textwrap
 # ──────────────────────────────────────────────────────────────────────────── #
 
+def test_agent(dungeon: Dungeon, iterations: int= 500):
+    """ tests an agent over a few hundred iterations, returns the stats """
+    assert len(dungeon.agents) == 1
+    agent, = dungeon.agents
+    wins, looses = 0, 0
+    for i in range(iterations):
+        dungeon.replay_map()
+        while not dungeon.over:
+            action = agent.play(agent.state)
+            dungeon.move(agent, action)
+        if dungeon.won:
+            wins += 1
+        else:
+            looses += 1
+    return wins, looses
+
 def setup_parser():
+    """ configures the parser with every optionnal arguments needed """
     # ------------------------- program description -------------------------- #
     default = "[default: %(default)s]"
     parser = argparse.ArgumentParser(prog='main',
@@ -40,6 +57,7 @@ def setup_parser():
 
     game_modes = parser.add_mutually_exclusive_group()
     maps = parser.add_mutually_exclusive_group()
+    inter = parser.add_mutually_exclusive_group()
     timestep = parser.add_argument_group()
 
     # ------------------------- optionnal parameters ------------------------- #
@@ -75,6 +93,12 @@ def setup_parser():
             time [in ms] waited between two frames in automatic policy play
             """ + default))
 
+    parser.add_argument("--test-iterations", metavar="iterations",
+            dest='test_iter', type=int, default=500,
+    help=textwrap.dedent("""\
+            Number of games to test the agent's performance
+            """ + default))
+
     # Play an given policy
     valid_agents= ('value-mdp', 'policy-mdp', 'qlearning')
     game_modes.add_argument("-p", "--policy", metavar="policy", dest='policy',
@@ -103,8 +127,16 @@ def setup_parser():
                 - ctrl-C : quit the game
             """) + default)
 
+    # Test the performance of an agent
+    inter.add_argument("--test", action="store_true",
+            dest="test", default=False,
+            help=textwrap.dedent("""\
+            Tests the performance of the agent:
+            prints some stats about its winrate in the current environment.
+            """) + default)
+
     # Watch a policy step by step
-    parser.add_argument("--step-by-step", action="store_true",
+    inter.add_argument("--step-by-step", action="store_true",
             dest="steps", default=False,
             help=textwrap.dedent("""\
             when watching a policy, watch it step by step
@@ -185,6 +217,11 @@ if __name__ == '__main__':
     # ───────────────────────── select the game-type ───────────────────────── #
     if args.interactive:
         interface.loop()
+    elif args.test:
+        w, l = test_agent(dungeon, args.test_iter)
+        winrate = w / (w + l)
+        print("{} won {:4.2%} of the games over {} iterations".format(
+            args.policy, winrate, args.test_iter))
     elif args.steps:
         interface.play_game_step()
     elif args.automatic:
