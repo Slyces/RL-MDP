@@ -12,7 +12,6 @@ if __name__ == '__main__':
 
     #game.load_map("maps/map_long.txt")
     player.reset_Qtable()
-    game.map.save_map("map.txt")
 
     inter.display()
     a = []
