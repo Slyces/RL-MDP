@@ -146,10 +146,13 @@ class GraphicalInterface(TextInterface, tk.Tk):
 
         # ────────────────────────── infos display ─────────────────────────── #
         f_width = myInfoFont.measure('x')
-        w = int((cell_size * m) / f_width)
+        w = max(50, int((cell_size * m) / f_width))
 
-        frame = tk.Frame(self) #, height=100)
-        # frame.pack_propagate(False)
+        # force_width = tk.Frame(self, width=max(450, cell_size * m))
+        # force_width.pack_propagate(False)
+        # force_width.pack()
+
+        frame = tk.Frame(self)
         frame.pack()
 
         self.message_actions = tk.Label(frame, font=myInfoFont, width=w, justify='left')
@@ -194,20 +197,53 @@ class GraphicalInterface(TextInterface, tk.Tk):
         if not self.dungeon.over:
             self.handle_input(event.char)
             self.display()
-        print(' GAME OVER '.center(80, '-'))
-        self.message_caption['text'] += '\n' + ' GAME OVER '.center(80, '-')
+        if self.dungeon.over and \
+                'GAME' not in self.message_caption['text'].split('\n')[-1]:
+            print(' GAME OVER '.center(35, '-'))
+            self.message_caption['text'] += '\n' + ' GAME OVER '.center(35, '-')
 
     # ──────────────── automatic agent∙s playing on keypress ───────────────── #
     def play_game_step(self):
         """ Show an agent playing the game step by step """
-        # @TODO
-        pass
+        self.dungeon.reset()
+        players = self.dungeon.agents
+        self.display()
+        self.bind('<Key>', lambda ev: self.next_step(ev, players))
+        self.loop()
+
+    def next_step(self, ev, players):
+        if not ev.char:
+            return
+        if self.dungeon.over and \
+                'GAME' not in self.message_caption['text'].split('\n')[-1]:
+            print(' GAME OVER '.center(35, '-'))
+            self.message_caption['text'] += '\n' + ' GAME OVER '.center(35, '-')
+        elif not self.dungeon.over:
+            actions = [agent.play(agent.state) for agent in players]
+            for (action, player) in zip(actions, players):
+                self.dungeon.move(player, action)
+        self.display()
 
     # ────────────────────── automatic agent∙s playing ─────────────────────── #
-    def play_game(self, time_step: float= 0.5):
+    def play_game(self, time_step: int= 500):
         """ Shows an agent playing the game """
-        # @TODO
-        pass
+        self.dungeon.reset()
+        players = self.dungeon.agents
+        self.display()
+        self.after(time_step, lambda : self.next_actions(players, time_step))
+        self.loop()
+
+    def next_actions(self, players, time_step):
+        if self.dungeon.over and \
+                'GAME' not in self.message_caption['text'].split('\n')[-1]:
+            print(' GAME OVER '.center(40, '-'))
+            self.message_caption['text'] += '\n' + ' GAME OVER '.center(40, '-')
+        elif not self.dungeon.over:
+            actions = [agent.play(agent.state) for agent in players]
+            for (action, player) in zip(actions, players):
+                self.dungeon.move(player, action)
+            self.after(time_step, lambda : self.next_actions(players, time_step))
+        self.display()
 
     # ────────────────────────────── main loop ─────────────────────────────── #
     def loop(self):
