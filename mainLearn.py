@@ -39,12 +39,14 @@ if __name__ == '__main__':
         file.write(''.join(("nombre iter : ", str(a))))
 
 
-    for j in range(20):
+    for j in range(30):
         for i in range(2000):
             q_table = player.Q
             game.reset()
             player.load_Qtable(q_table)
-            while not game.over:
+            t = 0
+            while not game.over and t <= 2000:
+                t +=1
                 game.caption = ''
                 old_state = player.state
                 action = player.policy()
@@ -53,6 +55,8 @@ if __name__ == '__main__':
                 player.process_reward(old_state, new_state, action, reward)
             if i % 100 == 0:
                 print(i + (j * 1000))
+            if t == 2000:
+                print("t")
         q_table = player.Q
         game.reset()
         player.load_Qtable(q_table)
@@ -64,13 +68,16 @@ if __name__ == '__main__':
             q_table = player.Q
             game.reset()
             player.load_Qtable(q_table)
-            while not game.over:
+            while not game.over and k <= 2000:
                 game.caption = ''
                 action = player.policy()
                 game.move(player, action)
                 k += 1
-            if player.alive:
+            if player.alive and k < 2000:
                 a.append(k)
+                print("ok")
+            if k == 2000:
+                print("k")
         ratio = len(a) / t
         a = np.mean(a)
 
