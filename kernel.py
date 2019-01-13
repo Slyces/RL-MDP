@@ -21,15 +21,16 @@ class Dungeon(object):
         self.map = DungeonMap(n, m)
         while not self.winnable:
             self.map = DungeonMap(n, m)
-        player_classes = [AdventurerLearning for i in range(nb_players)] \
-                if player_classes is None else player_classes
         assert len(player_classes) >= nb_players
-        self.agents = [pclass(self) for pclass in player_classes[:nb_players]]
         self.last_actions = [None for i in range(nb_players)]
         self.over, self.won = False, False
         self.caption = ''
 
         self.teleport_distributions = {}
+
+        player_classes = [AdventurerLearning for i in range(nb_players)] \
+                if player_classes is None else player_classes
+        self.agents = [pclass(self) for pclass in player_classes[:nb_players]]
 
         State.configure(n, m)
 

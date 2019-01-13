@@ -19,8 +19,8 @@ if __name__ == '__main__':
     # interface.loop()
 
     # ────────────────── interactively play the game in GUI ────────────────── #
-    interface = GraphicalInterface(Dungeon(8, 8, 1))
-    interface.loop()
+    # interface = GraphicalInterface(Dungeon(8, 8, 1))
+    # interface.loop()
 
     # ────────────────────────── trying default map ────────────────────────── #
     # n, m = 2, 2
@@ -30,3 +30,12 @@ if __name__ == '__main__':
 
     # interface = TextInterface(dungeon)
     # interface.play_game()
+
+    # ────────────────────────────── mdp policy ────────────────────────────── #
+    n, m = 10, 18
+    dungeon = Dungeon(n, m, 1, [ValueMDP])
+
+    # dungeon.load_map('default_map.txt')
+
+    interface = TextInterface(dungeon)
+    interface.play_game()
