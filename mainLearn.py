@@ -6,12 +6,13 @@ from interface import LearningInterface
 import os
 
 if __name__ == '__main__':
-    game = dungeon_game.kernel.Dungeon(3, 3, 1, [AdventurerLearning])
+    game = dungeon_game.kernel.Dungeon(8, 16, 1, [AdventurerLearning])
     inter = LearningInterface(game)
     player, = game.agents
 
-    game.load_map("maps/custom_map.txt")
+    #game.load_map("maps/map_long.txt")
     player.reset_Qtable()
+    game.map.save_map("map.txt")
 
     inter.display()
     a = []
@@ -55,7 +56,7 @@ if __name__ == '__main__':
                 new_state = player.state
                 player.process_reward(old_state, new_state, action, reward)
             if i % 100 == 0:
-                print(i + (j * 1000))
+                print(i + (j * 2000))
             if t == 2000:
                 print("t")
         q_table = player.Q
