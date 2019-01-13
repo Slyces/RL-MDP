@@ -35,7 +35,7 @@ if __name__ == '__main__':
     n, m = 10, 18
     dungeon = Dungeon(n, m, 1, [ValueMDP])
 
-    # dungeon.load_map('default_map.txt')
+    #dungeon.load_map('maps/map_short.txt')
 
     interface = TextInterface(dungeon)
     interface.play_game()
