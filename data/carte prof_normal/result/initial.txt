@@ -1,2 +1,0 @@
-ratio : 0.0016
-nombre iter : 115.1875
