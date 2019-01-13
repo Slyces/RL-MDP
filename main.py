@@ -121,7 +121,6 @@ def setup_parser():
     help=textwrap.dedent("""\
             watch the game played by a given policy. Available policies are :
             {}
-            please note that a qtable must be provided for the qlearning agent
             """.format('\n'.join(['- ' + p for p in valid_agents]))))
 
     # --------------------------- optionnal flags ---------------------------- #
@@ -216,7 +215,7 @@ if __name__ == '__main__':
                 'qlearning': AdventurerLearning }[args.policy]
 
 
-    dungeon = Dungeon(args.r, args.c, 1, [advClass])
+    dungeon = Dungeon(args.r, args.c, 1, [advClass], args.new_env)
 
 
     if args.map_path:
@@ -275,7 +274,7 @@ if __name__ == '__main__':
             if player.alive and k < 2000:
                 a.append(k)
         ratio = len(a) / t
-        print("% victory : ", (ratio*100), "%")
+        print("% victory : ", round((ratio*100), 2), "%")
 
 
     # ───────────────────────── select the interface ───────────────────────── #

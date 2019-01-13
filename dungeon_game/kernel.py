@@ -15,14 +15,14 @@ class Dungeon(object):
 
     p_enemy = 0.7
 
-    def __init__(self, n: int, m: int, nb_players: int = 1, player_classes: list= None):
+    def __init__(self, n: int, m: int, nb_players: int = 1, player_classes: list= None, new_env: bool = True):
         self.n, self.m = n, m
         State.configure(self.n, self.m)
-        self.map = DungeonMap(n, m)
 
         # ------------------------ creating a new map ------------------------ #
+        self.map = DungeonMap(n, m, new_env)
         while not self.winnable:
-            self.map = DungeonMap(n, m)
+            self.map = DungeonMap(n, m, new_env)
 
         self.last_actions = [None for i in range(nb_players)]
         self.over, self.won = False, False

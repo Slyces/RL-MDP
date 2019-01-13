@@ -78,14 +78,14 @@ class DungeonMap(object):
     """ Dungeon Map represented by a grid of n * m cells """
 
     # ------------ different types of cells found in the dungeon ------------- #
-    def __init__(self, n: int, m: int):
+    def __init__(self, n: int, m: int, new_env: bool = True):
         """
         The dungeon is a grid of size n * m, initialized
         with only a starting position (bottom right corner) and
         a treasure (bottom top corner).
         """
         self.n, self.m = n, m
-        self.default = True
+        self.default = new_env
         self.__grid = [Cell.empty for i in range(self.n * self.m)]
         self[0, 0] = Cell.treasure
         self[n - 1, m - 1] = Cell.start
