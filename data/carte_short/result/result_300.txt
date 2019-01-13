@@ -1,0 +1,2 @@
+nombre iter pour 300 : 24.05
+ratio : 0.6451612903225806

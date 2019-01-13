@@ -1,0 +1,2 @@
+nombre iter pour 30000 : 19.3
+ratio : 0.5882352941176471

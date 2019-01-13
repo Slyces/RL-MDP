@@ -1,0 +1,2 @@
+nombre iter pour 46000 : 14.8
+ratio : 0.5405405405405406

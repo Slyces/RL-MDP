@@ -10,13 +10,13 @@ if __name__ == '__main__':
     inter = LearningInterface(game)
     player, = game.agents
 
-    game.load_map("maps/map_short.txt")
+    game.load_map("maps/custom_map.txt")
     player.reset_Qtable()
 
     inter.display()
     a = []
     t = 0
-    while len(a) < 20 and t < 10000:
+    while len(a) < 100 and t < 10000:
         t += 1
         k = 0
         q_table = player.Q
@@ -64,7 +64,7 @@ if __name__ == '__main__':
         a = []
         t = 0
         c = 0
-        while len(a) < 20 and t < 10000:
+        while len(a) < 100 and t < 10000:
             print(c," ",k," ", t)
             t += 1
             k = 0

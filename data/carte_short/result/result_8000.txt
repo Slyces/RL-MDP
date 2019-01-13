@@ -1,0 +1,2 @@
+nombre iter pour 8000 : 25.25
+ratio : 0.7142857142857143

@@ -1,0 +1,2 @@
+nombre iter pour 16000 : 94.8
+ratio : 0.5434782608695652
