@@ -1,13 +1,14 @@
 # encoding: utf-8
 import time, kernel, csv, numpy as np
 from interface import LearningInterface
+import os
 
 if __name__ == '__main__':
-    game = kernel.Dungeon(8, 8)
+    game = kernel.Dungeon(3, 6)
     inter = LearningInterface(game)
     player, = game.agents
 
-    game.load_map("default_map.txt")
+    game.load_map("map/map_short.txt")
 
     inter.display()
     q_table = player.Q
@@ -62,7 +63,7 @@ if __name__ == '__main__':
         player.load_Qtable(q_table)
         a = []
         t = 0
-        while len(a) < 20 and t < 10000:
+        while len(a) < 50 and t < 10000:
             t += 1
             k = 0
             q_table = player.Q
@@ -81,10 +82,14 @@ if __name__ == '__main__':
         ratio = len(a) / t
         a = np.mean(a)
 
-        path = "data/Qtable_", str((i + 1) * (j + 1)), ".csv"
+        path = "data/Qtable/Qtable_", str((i + 1) * (j + 1)), ".csv"
         path = ''.join(path)
-        path2 = "data/result_", str((i + 1) * (j + 1)), ".txt"
+        path2 = "data/result/result_", str((i + 1) * (j + 1)), ".txt"
         path2 = ''.join(path2)
+        if not os.path.exists("data/Qtable/"):
+            os.makedirs("data/Qtable/")
+        if not os.path.exists("data/result/"):
+            os.makedirs("data/result/")
         with open(path, 'w', newline='') as csvFile:
             writer = csv.writer(csvFile)
             writer.writerows(player.Q)
