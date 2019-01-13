@@ -166,13 +166,21 @@ def setup_parser():
             """) + default)
 
     # Only winnable
-    parser.add_argument("-w", "--check-winnable", action="store_true",
-            dest="check_winnable", default=False,
+    parser.add_argument("-w", "--dont-check-winnable", action="store_false",
+            dest="dont_check_winnable", default=True,
             help=textwrap.dedent("""\
             when generating a random map, keep generating until we find one
             with a direct path from start to key, key to treasure and treasure
             to start.
             """) + default)
+
+    #  new environnement
+    parser.add_argument("-n", "--new-env", action="store_false",
+                        dest="new_env", default=True,
+                        help=textwrap.dedent("""\
+                Use a donjon with our special enemy
+                """) + default)
+
 
     # Use a text interface instead of graphical
     parser.add_argument("-t", "--text-interface", action="store_true",
@@ -207,7 +215,9 @@ if __name__ == '__main__':
         advClass = { 'value-mdp': ValueMDP, 'policy-mdp': PolicyMDP,
                 'qlearning': AdventurerLearning }[args.policy]
 
+
     dungeon = Dungeon(args.r, args.c, 1, [advClass])
+
 
     if args.map_path:
         if args.map_path[-4:] != '.txt':
@@ -215,7 +225,7 @@ if __name__ == '__main__':
             exit(0)
         dungeon.load_map(args.map_path)
 
-    if args.check_winnable and args.random_map:
+    if args.dont_check_winnable and args.random_map:
         while not dungeon.winnable:
             dungeon = Dungeon(args.r, args.c, 1, [advClass])
 
@@ -223,6 +233,9 @@ if __name__ == '__main__':
     if args.policy == 'qlearning':
         player = dungeon.agents[0]
         if args.qtable:
+            if args.qtable[-4:] != '.csv':
+                print("the qtable file is not a valid .csv file.")
+                exit(0)
             player.load_Qtable_from_file(args.qtable)
         else:
             player.reset_Qtable()
