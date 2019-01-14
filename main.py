@@ -50,9 +50,12 @@ def setup_parser():
 
                 Example of uses
                 ---------------
-                main -tgi : play interactively a generated map in text mode
-                main -p value-mdp -g --automatic : watch the optimal policy
-                                                   in graphical mode
+                play interactively a generated map in text mode
+                >> main -tgi
+                watch a policy in graphic mode on a random map size 10 x 10
+                >> main -p value-mdp -g -r 10 -c 10 --automatic
+                watch step by step the qlearning policy on a specific map
+                >> main -l maps/default_map.txt -p qlearning
                 '''))
 
     game_modes = parser.add_mutually_exclusive_group()
@@ -114,7 +117,7 @@ def setup_parser():
                     """ + default))
 
     # Play an given policy
-    valid_agents= ('value-mdp', 'policy-mdp', 'qlearning')
+    valid_agents= ('value-mdp', 'policy-mdp', 'qlearning', 'random')
     game_modes.add_argument("-p", "--policy", metavar="policy", dest='policy',
             type=str, choices=valid_agents,
     help=textwrap.dedent("""\
@@ -211,11 +214,9 @@ if __name__ == '__main__':
     advClass = Adventurer
     if args.policy:
         advClass = { 'value-mdp': ValueMDP, 'policy-mdp': PolicyMDP,
-                'qlearning': AdventurerLearning }[args.policy]
-
+                'qlearning': AdventurerLearning, 'random': RandomAdventurer}[args.policy]
 
     dungeon = Dungeon(args.r, args.c, 1, [advClass], args.new_env)
-
 
     if args.map_path:
         if args.map_path[-4:] != '.txt':

@@ -96,6 +96,11 @@ class Adventurer(object):
                 '{ ' + ' , '.join([item.value for item in self.__items]) + ' }',
                 'ALIVE' if self.alive else 'DEAD')
 
+# ─────────────────────────────── random agent ─────────────────────────────── #
+class RandomAdventurer(Adventurer):
+    def play(self, state: State):
+        return random.choice(list(Direction))
+
 # ───────────────────────────── q-learning agent ───────────────────────────── #
 class AdventurerLearning(Adventurer):
 
