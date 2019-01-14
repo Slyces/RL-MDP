@@ -88,10 +88,7 @@ class MDP(Adventurer):
             lP, lQ = P, Q
             Ts = T[np.arange(n_states), P, :] # Transitions of current Policy
             Rs = R[np.arange(n_states), P]
-            # try:
             V = np.linalg.solve(self.gamma * Ts - I, -Rs)
-            # except np.linalg.linalg.LinAlgError:
-                # V = np.dot(np.linalg.pinv(self.gamma * Ts - I), - Rs)
             Q = R + self.gamma * np.matmul(T, V)
             P = rand_argmax(Q, 1)
             i += 1

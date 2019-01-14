@@ -198,13 +198,13 @@ if __name__ == '__main__':
 
     if not args.interactive and not args.policy:
         print("You must either play interactively [-i] or visualise a policy. [-p]")
-        parser.print_help()
+        print("See help with -h for more infos.")
         exit(0)
 
     # ────────────────────────── create the dungeon ────────────────────────── #
     if not args.random_map and not args.map_path:
         print("You must either load a map [-l] or generate one [-g]")
-        parser.print_help()
+        print("See help with -h for more infos.")
         exit(0)
 
     # ─────────────────────── replace agents if policy ─────────────────────── #
