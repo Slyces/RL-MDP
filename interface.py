@@ -17,7 +17,8 @@ class TextInterface(object):
         self.player, = dungeon.agents
 
     # ──────────────────── play a game with an Adventurer ──────────────────── #
-    def play_game(self, time_step: float= 0.5):
+    def play_game(self, time_step_ms: int= 500):
+        time_step = time_step_ms / 1000 # convert from ms to seconds
         self.dungeon.reset()
         players = self.dungeon.agents
         self.display()
