@@ -2,9 +2,9 @@
 # encoding: utf-8
 # ───────────────────────────────── imports ────────────────────────────────── #
 from interface import TextInterface, GraphicalInterface
-from dungeon_game.characters import *
-from dungeon_game.mdp import *
-from dungeon_game.kernel import Dungeon
+from game.characters import *
+from game.mdp import *
+from game.kernel import Dungeon
 import sys ,argparse, textwrap
 # ──────────────────────────────────────────────────────────────────────────── #
 
@@ -216,7 +216,7 @@ if __name__ == '__main__':
         advClass = { 'value-mdp': ValueMDP, 'policy-mdp': PolicyMDP,
                 'qlearning': AdventurerLearning, 'random': RandomAdventurer}[args.policy]
 
-    dungeon = Dungeon(args.r, args.c, 1, [advClass], args.new_env)
+    dungeon = Dungeon(args.r, args.c, 1, [advClass], not args.new_env)
 
     if args.map_path:
         if args.map_path[-4:] != '.txt':

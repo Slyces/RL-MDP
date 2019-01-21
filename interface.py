@@ -1,8 +1,8 @@
 # encoding: utf-8
 # ───────────────────────────────── imports ────────────────────────────────── #
-from dungeon_game.kernel import Dungeon, Direction
-from dungeon_game.dungeon_map import Cell
-from dungeon_game.utils import add_sword
+from game.kernel import Dungeon, Direction
+from game.dungeon_map import Cell
+from game.utils import add_sword
 from time import sleep
 from tkinter.font import Font
 import os, sys, tkinter as tk
@@ -17,7 +17,8 @@ class TextInterface(object):
         self.player, = dungeon.agents
 
     # ──────────────────── play a game with an Adventurer ──────────────────── #
-    def play_game(self, time_step: float= 0.5):
+    def play_game(self, time_step: int= 500):
+        time_step /= 1000
         self.dungeon.reset()
         players = self.dungeon.agents
         self.display()
@@ -174,9 +175,9 @@ class GraphicalInterface(TextInterface, tk.Tk):
             cell = self.dungeon.map[i]
             label.configure(text=dungeon_cells[i], fg=self.fg,
                     state='active' if i == self.player.cell_id else 'normal')
-            if cell == Cell.magic_sword:
+            if cell in (Cell.magic_sword, Cell.magic_rune, Cell.magic_book):
                 label.configure(fg='#8FBC8F')
-            if cell == Cell.golden_key or cell == Cell.treasure:
+            if cell in (Cell.golden_key, Cell.treasure):
                 label.configure(fg='#B31B1B')
         # --------------------------- adding infos --------------------------- #
         # text_info = '-' * (1 + self.dungeon.m * 4) + '\n'

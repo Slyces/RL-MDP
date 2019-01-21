@@ -4,7 +4,7 @@
 from .markov import MarkovChain
 from .characters import Adventurer, AdventurerLearning,State
 from .dungeon_map import DungeonMap, Direction, Cell, AStar
-from .utils import Color, color_grid
+from .utils import Color, color_grid, add_sword
 from random import random
 import numpy as np
 # ──────────────────────────────────────────────────────────────────────────── #
@@ -57,11 +57,11 @@ class Dungeon(object):
     # ──────────────────── constructing the reward matrix ──────────────────── #
     def make_reward_matrix(self, T: np.array):
         """
-        The reward matrix is quite simple:
-            - death → (*,*,*) : -1
-            - (*,0,*) → (*,1,*) take key : 1
-            - (*,1,*) → (*,2,*) take treasure : 1
-            - (*,2,start) → (*,2,start) : 1
+        The reward matrix is quite simple :
+            - death       → (*,*,*)     : -1       | punish death
+            - (*,0,*)     → (*,1,*)     : 1 (+  ) | reward finding the key
+            - (*,1,*)     → (*,2,*)     : 1 (+ ﰤ ) | reward finding the treasure
+            - (*,2,start) → (*,2,start) : 1        | reward winning
             - else, 0
         Negative reward for death
         Positive reward for (actually) picking up the key, picking up the treasure
@@ -81,23 +81,25 @@ class Dungeon(object):
                         if np.amax(T[s.id, a.to_int]) == 1:
                             certain_state = np.argmax(T[s.id, a.to_int])
                             st = State(s_id=certain_state) # target state
+                            # Finding the key
                             # -------------- (*,0,*) → (*,1,*) --------------- #
                             #                (*  *)   (*  *)
                             if s.treasure == 0 and st.treasure == 1:
                                 R[s.id, a.to_int] = 0.5
+
+                            # Finding the treasure
                             # -------------- (*,1,*) → (*,2,*) --------------- #
                             #                (*  *)   (* ﰤ *)
                             if s.treasure == 1 and st.treasure == 2:
                                 R[s.id, a.to_int] = 0.5
-                            # -------------- (0,*,*) → (1,*,*) --------------- #
-                            #                ( * *)   (理* *)
-                            if s.sword == 0 and st.sword == 1:
-                                R[s.id, a.to_int] = 0.5
+
+                            # Winning the game
                             # ---------- (*,2,start) → (*,2,start) ----------- #
                             #            (* 2 ◉ )      (* 2 ◉ ) 
                             if s.treasure == st.treasure == 2 and \
                                     s.position == st.position == n * m - 1:
                                 R[s.id, a.to_int] = 1
+                            # Loosing the game
                             # ---------------- death → death ----------------- #
                             if s.id == st.id == death:
                                 R[s.id, a.to_int] = -1
@@ -118,11 +120,11 @@ class Dungeon(object):
         S = self.markov_chain()
         M = self.moving_markov_chain()
         # ────────────────────────── for each state ────────────────────────── #
-        for sw in range(2):
-            for tr in range(3):
+        for it in range(State.items_count):
+            for tr in range(State.treasures):
                 for p in range(n * m):
                     i, j = p // m, p % m
-                    s = State(sw, tr, p)
+                    s = State(it, tr, p)
                     cell = self.map[i, j]
                     # ───────── find the transitions from that state ───────── #
                     if cell == Cell.magic_portal or cell == Cell.moving_platform:
@@ -194,7 +196,6 @@ class Dungeon(object):
         needed multiple times, we store the results of already computed calculations
         to reuse them and modify them according to the need.
         """
-        # This method will be heavily commented
         n, m = self.n, self.m
 
         # ──────────── extracting the grid position of the state ───────────── #
@@ -202,6 +203,13 @@ class Dungeon(object):
 
         # ────────────── checking that the state given is valid ────────────── #
         assert self.map[p] in (Cell.magic_portal, Cell.moving_platform)
+
+        # ────────────────── if magic rune, just do nothing ────────────────── #
+        if state.rune:
+            transition = np.zeros(State.max_id + 1, np.float64)
+            transition[state.id] = 1
+            assert abs(sum(transition) - 1) < 10e-5
+            return transition
 
         # ────────────────── checking for existing results ─────────────────── #
         distrib = np.zeros(n * m, np.float64)
@@ -220,9 +228,9 @@ class Dungeon(object):
         # We now have the distribution over the grid position. However, we need
         # a distribution over the real state of the game, accounting for items.
         # As the special cells do not impact (yet) items, we just need to 
-        # put this vector at the right place in the (6 times) larger state vector
+        # put this vector at the right place in the (12 times) larger state vector
         # of the dungeon.
-        padding = state.sword * 3 + state.treasure
+        padding = state.items * 3 + state.treasure
         block_size = n * m
 
         transition = np.zeros(State.max_id + 1, np.float64)
@@ -240,12 +248,12 @@ class Dungeon(object):
         n, m = self.n, self.m
         death = n_state - 1
         M[death, death] = 1
-        for sw in range(2):
-            for tr in range(3):
+        for it in range(State.items_count):
+            for tr in range(State.treasures):
                 for p in range(n * m):
                     i, j = p // m, p % m
                     cell = self.map[i, j]
-                    state = State(sw, tr, p)
+                    state = State(it, tr, p)
                     index = state.id
                     # ────────────── empty cell : stay inplace ─────────────── #
                     if cell == Cell.empty or cell == Cell.start:
@@ -257,21 +265,32 @@ class Dungeon(object):
                     # ──────────────── crack : kill instantly ──────────────── #
                     if cell == Cell.crack:
                         M[index, death] = 1
-                    # ──────────────────── ennemy : fight ──────────────────── #
+                    # ───────────── normal ennemy : use a sword ────────────── #
+                    # Sword → always win against normal ennemies
+                    if cell == Cell.enemy_normal and not state.sword:
+                        M[index, index] = Dungeon.p_enemy
+                        M[index, death] = 1 - Dungeon.p_enemy
                     if cell == Cell.enemy_normal and state.sword:
                         M[index, index] = 1 # fight won
-                    if cell == Cell.enemy_normal and not state.sword:
-                        M[index, index] = 1 - Dungeon.p_enemy
-                        M[index, death] = Dungeon.p_enemy
-                    # ───────── political enemy : do not use a sword ───────── #
-                    if cell == Cell.enemy_special and not state.sword:
+
+                    # ──────────── political ennemy : use a book ───────────── #
+                    # Book → always win against special ennemies
+                    if cell == Cell.enemy_special and not state.book:
+                        M[index, index] = Dungeon.p_enemy
+                        M[index, death] = 1 - Dungeon.p_enemy
+                    if cell == Cell.enemy_special and state.book:
                         M[index, index] = 1 # not dangerous when weaponless
-                    if cell == Cell.enemy_special and state.sword:
-                        M[index, index] = 1 - Dungeon.p_enemy
-                        M[index, death] = Dungeon.p_enemy
                     # ─────────────── magic sword acquisition ──────────────── #
                     if cell == Cell.magic_sword:
-                        state.sword = 1
+                        state.items = 1
+                        M[index, state.id] = 1
+                    # ──────────────── magic book acquisition ──────────────── #
+                    if cell == Cell.magic_book:
+                        state.items = 2
+                        M[index, state.id] = 1
+                    # ──────────────── magic rune acquisition ──────────────── #
+                    if cell == Cell.magic_rune:
+                        state.items = 3
                         M[index, state.id] = 1
                     # ─────────────────── key acquisition ──────────────────── #
                     if cell == Cell.golden_key:
@@ -337,6 +356,9 @@ class Dungeon(object):
 
     def teleport(self, agent: Adventurer, position: (int, int)):
         """ Teleports an agent to a given position (might be usefull for animations)"""
+        if agent.has_item(Cell.magic_rune) and self.map[agent.pos] != Cell.wall:
+            self.caption = "Runic power flows through my veins. I'm immune to your magic !"
+            return position
         i, j = position
         assert 0 <= i < self.n and 0 <= j < self.m, "can't teleport outside of the dungeon"
         assert self.map[position] != Cell.wall, "can't teleport in a wall"
@@ -354,16 +376,23 @@ class Dungeon(object):
         """
         # assert cell != Cell.wall, "wall cells should never be entered"
         sword = agent.has_item(Cell.magic_sword)
+        book = agent.has_item(Cell.magic_book)
+        rune = agent.has_item(Cell.magic_rune)
         # -------------- walls bounce back to starting position -------------- #
         if cell == Cell.wall:
             self.caption += "Bounced against a wall ... Back to start !"
             return self.teleport(agent, (self.n - 1, self.m - 1))
-        # ---------------- items are treated in the same way ----------------- #
-        elif cell == Cell.golden_key or cell == Cell.magic_sword:
+        # ---------------- magic items are mutually exclusive ---------------- #
+        magic_items = (Cell.magic_sword, Cell.magic_book, Cell.magic_rune)
+        if cell == Cell.golden_key or cell in magic_items:
             if agent.has_item(cell):
                 self.caption += "Can't pick up another {}, already have one".format(cell.name)
             else:
-                self.caption += "Picked up an item ({}) !!".format(cell.name)
+                self.caption += add_sword("Picked up an item ( {} : {} ) !!".format(cell.name, cell.value))
+                for item in magic_items:
+                    if agent.has_item(item) and cell != Cell.golden_key:
+                        agent.drop_item(item)
+                        self.caption += " I had to drop my {} though ..".format(item.name)
                 agent.acquire_item(cell)
                 return 0.5
         # ------------------ treasure is particular, though ------------------ #
@@ -375,6 +404,7 @@ class Dungeon(object):
                 agent.acquire_item(cell)
                 return 0.5
         # ------------ magic portal and moving platforms teleport ------------ #
+        # Unless the player has the magic rune
         elif cell == Cell.magic_portal:
             valid_cell = self.map.random_cell_dist()
             self.caption += "STARGAAAATE : {} → {}".format(agent.pos, valid_cell)
@@ -382,8 +412,10 @@ class Dungeon(object):
         elif cell == Cell.moving_platform:
             valid_neighbor = self.map.random_cell_dist(agent.pos, 1)
             (nx, ny), (x, y) = valid_neighbor, agent.pos
-            self.caption += "Woops ! It moves ! (teleported to {})".format(Direction((nx - x, ny - y)).name)
-            return self.teleport(agent, valid_neighbor) # adjacent cell <=> Manhattan dist of 1
+            self.caption += "Woops ! It moves ! (teleported to {})\
+                    ".format(Direction((nx - x, ny - y)).name)
+            # adjacent cell <=> Manhattan dist of 1
+            return self.teleport(agent, valid_neighbor)
         # ---------------------- oh, CRACK, you're dead ---------------------- #
         elif cell == Cell.crack:
             self.caption += "DAMN ! CRACK !!! I'm dead."
@@ -415,17 +447,16 @@ class Dungeon(object):
         elif cell == Cell.enemy_normal and sword:
             self.caption += "BIM ! BAM ! MAGIC SWORD IN YOUR FACE !"
         # -------------------------- special enemy --------------------------- #
-        elif cell == Cell.enemy_special and not sword:
-            # don't fight
-            self.caption += "Not a threat for me."
-        elif cell == Cell.enemy_special and sword:
-            self.caption += "This enemy can't be slain ! "
+        elif cell == Cell.enemy_special and not book:
+            self.caption += "This enemy can't be slain without knowledge ! "
             p = random()  # random floating number in [0, 1[
-            if p > Dungeon.p_enemy:  # the player is victorious (p_enemy)%
+            if p < Dungeon.p_enemy:  # the player is victorious (p_enemy)%
                 self.caption += "I managed to flee."
             else:
                 self.caption += "Goodbye, sweet world"
                 self.kill(agent)
+        elif cell == Cell.enemy_special and book:
+            self.caption += "Knowledge is power. Beware of wisdom."
         # ------------ returning to the start (with the treasure) ------------ #
         elif cell == Cell.start and agent.has_item(Cell.treasure):
             self.caption += "I WON. !!!"
@@ -493,15 +524,19 @@ class Dungeon(object):
     def colored_str(self):
         n, m = self.n, self.m
         key = None
-        sword = None
+        sword, book, rune = None, None, None
         for p in range(n * m):
             i, j = p // m, p % m
             if self.map[i, j] == Cell.golden_key:
                 key = (i, j)
             if self.map[i, j] == Cell.magic_sword:
                 sword = (i, j)
+            if self.map[i, j] == Cell.magic_book:
+                book = (i, j)
+            if self.map[i, j] == Cell.magic_rune:
+                rune = (i, j)
         color = {
-                Color.blue: [sword],
+                Color.blue: [sword, book, rune],
                 Color.red: [(0, 0), key],
                 Color.green: [self.agents[0].pos]
             }
@@ -567,42 +602,3 @@ class Dungeon(object):
                     utils.Color.green: path_back
                     })
         return map_repr + legend # + '\n'
-
-
-# ──────────────────────────────── executable ──────────────────────────────── #
-# if __name__ == '__main__':
-    # np.set_printoptions(precision=5, linewidth=200)
-
-    # custom_game = Dungeon(4, 3)
-    # b = Cell.start
-    # p = Cell.magic_portal
-    # e = Cell.empty
-    # s = Cell.magic_sword
-    # m = Cell.moving_platform
-    # t = Cell.treasure
-    # k = Cell.golden_key
-
-    # # custom_game.map.load([t, p, p, s,
-    # #                       p, p, m, p,
-    # #                       m, p, m, m,
-    # #                       k, m, p, b])
-    # custom_game.map.load([t, e, s,
-                          # e, m, e,
-                          # e, m, e,
-                          # k, e, b])
-
-    # print(custom_game)
-
-    # S = custom_game.markov_chain()
-    # M = custom_game.moving_markov_chain()
-
-    # # print(State(0, 0, 11))
-
-    # # tr = custom_game.special_transition(S, M, State(0, 0, 11))
-    # # for (i, p) in enumerate(tr):
-        # # s = State(s_id=i)
-        # # if p > 0:
-            # # print('- {:4.2%}: {}'.format(p, s))
-
-    # T = custom_game.make_transition_matrix()
-    # custom_game.display_transition(State(0, 0, 15), Direction.NORTH)

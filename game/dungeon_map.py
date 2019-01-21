@@ -25,33 +25,46 @@ class Direction(Enum):
 # ─────────────────────────────── Cells Types ──────────────────────────────── #
 class Cell(Enum):
     pretty_cells = True
+
     empty = '  '[pretty_cells]
     start = '◉◉'[pretty_cells]
     wall = '■■'[pretty_cells]
+
     enemy_normal = 'Eﲅ'[pretty_cells]
-    enemy_special = 'Q'[pretty_cells]
+    enemy_special = 'Q'[pretty_cells]
+
     trap = 'R'[pretty_cells]
     crack = 'Cﲯ'[pretty_cells]
-    treasure = 'Tﰤ'[pretty_cells]
-    magic_sword = 'SS'[pretty_cells]
-    golden_key = 'K'[pretty_cells]
+
     magic_portal = 'P'[pretty_cells]
     moving_platform = '--'[pretty_cells]
+
+    magic_rune = 'Rᛟ'[pretty_cells]
+    magic_book = 'B'[pretty_cells]
+    magic_sword = 'SS'[pretty_cells]
+    golden_key = 'K'[pretty_cells]
+    treasure = 'Tﰤ'[pretty_cells]
 
     def to_save(self):
         switch = {
             self.empty: "a",
             self.start: "v",
             self.wall: "w",
+
             self.enemy_normal: "e",
             self.enemy_special: 'q',
+
             self.trap: "r",
             self.crack: "c",
+
+            self.magic_portal: "p",
+            self.moving_platform: "m",
+
+            self.magic_rune: "u",
+            self.magic_book: "b",
             self.treasure: "t",
             self.magic_sword: "s",
             self.golden_key: "k",
-            self.magic_portal: "p",
-            self.moving_platform: "m",
         }
         return switch[self]
 
@@ -65,6 +78,8 @@ class Cell(Enum):
             'r': Cell.trap,
             'c': Cell.crack,
             't': Cell.treasure,
+            'b': Cell.magic_book,
+            'u': Cell.magic_rune,
             's': Cell.magic_sword,
             'k': Cell.golden_key,
             'p': Cell.magic_portal,
@@ -128,11 +143,15 @@ class DungeonMap(object):
             - 1 (& only &) treasure
             - 1+ golden key
             - 1+ magic sword
+            - 1+ magic rune
+            - 1+ magic book
         """
         g = self.__grid if g is None else g
         return g.count(Cell.start) == 1 and \
                g.count(Cell.treasure) == 1 and \
                g.count(Cell.golden_key) >= 1 and \
+               g.count(Cell.magic_book) >= 1 and \
+               g.count(Cell.magic_rune) >= 1 and \
                g.count(Cell.magic_sword) >= 1
 
     # ──────────── find all non-wall cells at a certain distance ───────────── #
@@ -196,7 +215,8 @@ class DungeonMap(object):
         # ------------------- treasure and start are fixed ------------------- #
         grid[0] = Cell.treasure
         grid[n * m - 1] = Cell.start
-        required = [Cell.golden_key, Cell.magic_sword]
+        required = [Cell.golden_key, Cell.magic_sword, Cell.magic_book,
+                Cell.magic_rune]
         while len(required) > 0:
             h = randint(1, n * m - 2)
             if grid[h] == '': grid[h] = required.pop()
@@ -212,16 +232,10 @@ class DungeonMap(object):
         ]
 
         if not self.default:
-            for index, item in enumerate(cell_p):
-                itemlist = list(item)
-                if itemlist[0] == Cell.enemy_normal:
-                    itemlist[1] = 0.05
-                item = tuple(itemlist)
-                cell_p[index] = item
-
             cell_p.append((Cell.enemy_special, 0.05))
-
-
+            for i, (cell, p) in enumerate(cell_p):
+                if cell == Cell.enemy_normal:
+                    cell_p[i] = (cell, 0.05)
 
         cells = [cell for (cell, _) in cell_p]
         distrib = [p for (_, p) in cell_p]
@@ -254,9 +268,9 @@ class DungeonMap(object):
     def load_map(self, save_path: str):
         try:
             with open(save_path, 'r') as file:
-                line = file.readline()
+                line = file.readline()[:-1]
                 self.n, self.m = [int(x) for x in line.split(',')]
-                line = file.readline()
+                line = file.readline()[:-1]
                 self.__grid = [Cell.to_load(c) for c in line]
         except FileNotFoundError:
             print("File to load don't exist !")

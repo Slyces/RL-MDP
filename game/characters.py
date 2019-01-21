@@ -38,7 +38,11 @@ class Adventurer(object):
         treasure = 0
         if self.has_item(Cell.golden_key): treasure = 1
         if self.has_item(Cell.treasure): treasure = 2
-        return State(self.has_item(Cell.magic_sword), treasure, self.cell_id)
+        items = 0
+        if self.has_item(Cell.magic_sword): items = 1
+        if self.has_item(Cell.magic_book): items = 2
+        if self.has_item(Cell.magic_rune): items = 3
+        return State(items, treasure, self.cell_id)
 
     # ────────────────────────── getter for cell id ────────────────────────── #
     @property
@@ -66,6 +70,10 @@ class Adventurer(object):
                 self, item))
         else:
             self.__items.append(item)
+
+    def drop_item(self, item):
+        if item in self.__items:
+            self.__items.remove(item)
 
     def has_item(self, item):
         return item in self.__items
