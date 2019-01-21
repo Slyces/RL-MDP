@@ -71,7 +71,7 @@ def setup_parser():
             """))
 
     # Change the ennemy probability
-    maps.add_argument('-e', "--enemy-probability", metavar="enemy-prob", dest='enemy_p',
+    parser.add_argument('-e', "--enemy-probability", metavar="enemy-prob", dest='enemy_p',
             type=float, default=Dungeon.p_enemy, help=textwrap.dedent("""\
             probability to win against an enemy in the dungeon
             """))
