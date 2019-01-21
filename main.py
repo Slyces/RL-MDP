@@ -70,6 +70,12 @@ def setup_parser():
             load a map from a txt. provide the complete or relative path
             """))
 
+    # Change the ennemy probability
+    maps.add_argument('-e', "--enemy-probability", metavar="enemy-prob", dest='enemy_p',
+            type=float, default=Dungeon.p_enemy, help=textwrap.dedent("""\
+            probability to win against an enemy in the dungeon
+            """))
+
     # Save random map to file
     parser.add_argument('-s', "--save-map", metavar="save-path", dest='save_path',
             type=str, default='', help=textwrap.dedent("""\
@@ -204,31 +210,34 @@ if __name__ == '__main__':
         print("See help with -h for more infos.")
         exit(0)
 
-    # ────────────────────────── create the dungeon ────────────────────────── #
-    if not args.random_map and not args.map_path:
-        print("You must either load a map [-l] or generate one [-g]")
-        print("See help with -h for more infos.")
-        exit(0)
-
     # ─────────────────────── replace agents if policy ─────────────────────── #
     advClass = Adventurer
     if args.policy:
         advClass = { 'value-mdp': ValueMDP, 'policy-mdp': PolicyMDP,
                 'qlearning': AdventurerLearning, 'random': RandomAdventurer}[args.policy]
 
+    # ────────────────────────── create the dungeon ────────────────────────── #
+    if not args.random_map and not args.map_path:
+        print("You must either load a map [-l] or generate one [-g]")
+        print("See help with -h for more infos.")
+        exit(0)
+
+    Dungeon.p_enemy = args.enemy_p
     dungeon = Dungeon(args.r, args.c, 1, [advClass], args.new_env)
 
+    # ────────────────────────────── load a map ────────────────────────────── #
     if args.map_path:
         if args.map_path[-4:] != '.txt':
             print("The map path provided is not a valid txt file.")
             exit(0)
         dungeon.load_map(args.map_path)
 
+    # ────────────── recreate the dungeon if it's not winnable ─────────────── #
     if args.dont_check_winnable and args.random_map:
         while not dungeon.winnable:
             dungeon = Dungeon(args.r, args.c, 1, [advClass])
 
-
+    # ─────────────────────── handle qlearning policy ──────────────────────── #
     if args.policy == 'qlearning':
         player = dungeon.agents[0]
         if args.qtable:

@@ -261,14 +261,14 @@ class Dungeon(object):
                     if cell == Cell.enemy_normal and state.sword:
                         M[index, index] = 1 # fight won
                     if cell == Cell.enemy_normal and not state.sword:
-                        M[index, index] = 1 - Dungeon.p_enemy
-                        M[index, death] = Dungeon.p_enemy
+                        M[index, index] = Dungeon.p_enemy
+                        M[index, death] = 1 - Dungeon.p_enemy
                     # ───────── political enemy : do not use a sword ───────── #
                     if cell == Cell.enemy_special and not state.sword:
                         M[index, index] = 1 # not dangerous when weaponless
                     if cell == Cell.enemy_special and state.sword:
-                        M[index, index] = 1 - Dungeon.p_enemy
-                        M[index, death] = Dungeon.p_enemy
+                        M[index, index] = Dungeon.p_enemy
+                        M[index, death] = 1 - Dungeon.p_enemy
                     # ─────────────── magic sword acquisition ──────────────── #
                     if cell == Cell.magic_sword:
                         state.sword = 1
