@@ -33,9 +33,9 @@ def setup_parser():
             description=textwrap.dedent('''\
                 Markovian Decision Process and Reinforcement Learning
                 -----------------------------------------------------
-                    This program implements a game environment (a dungeon) 
+                    This program implements a game environment (a dungeon)
                     and some artificial agents that play in that environment.
-                
+
                     With this program, you can:
                     - use a text or graphical interface
                     - play interactively the game
@@ -341,3 +341,5 @@ if __name__ == '__main__':
 
     # interface = TextInterface(dungeon)
     # interface.play_game()
+
+    # Added a comment
